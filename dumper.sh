@@ -1024,7 +1024,7 @@ find "$OUTDIR" -type f -printf '%P\n' | sort | grep -v ".git/" > "$OUTDIR"/all_f
 
 # Generate LineageOS Trees
 if [[ "$treble_support" = true ]]; then
-        aospdtout="lineage-device-tree"
+        aospdtout="aosp-device-tree"
         mkdir -p $aospdtout
         uvx aospdtgen $OUTDIR -o $aospdtout
 
