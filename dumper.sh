@@ -811,9 +811,6 @@ if [[ -f "${OUTDIR}"/dtbo.img ]]; then
 	printf "dtbo extracted\n"
 fi
 
-# Show some info
-neofetch || uname -r
-
 # Extract Partitions
 for p in $PARTITIONS; do
 	if ! echo "${p}" | grep -q "boot\|recovery\|dtbo\|vendor_boot\|tz"; then
