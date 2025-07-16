@@ -1198,7 +1198,7 @@ if [[ -s "${PROJECT_DIR}"/.github_token ]]; then
 	# Commit and Push
 	printf "\nPushing to %s via HTTPS...\nBranch:%s\n" "https://github.com/${GIT_ORG}/${repo}.git" "${branch}"
 	sleep 1
-	git remote add origin https://${GITHUB_TOKEN}@github.com/${GIT_ORG}/${repo}.git "${branch}"
+	git remote add origin https://${GITHUB_TOKEN}@github.com/${GIT_ORG}/${repo}.git
 	commit_and_push
 	sleep 1
 	
