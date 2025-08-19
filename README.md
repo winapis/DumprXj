@@ -58,7 +58,51 @@ Help Context:
          *.nb0 | .*chunk* | *.pac | *super*.img | *system*.sin
 ```
 
-## How to use it to Upload the Dump in GitHub
+## GitHub Actions Workflow Usage
+
+You can now use the automated GitHub Actions workflow to dump firmware automatically in the cloud. This workflow allows you to:
+
+- Specify a firmware URL to download and dump
+- Choose between GitHub or GitLab as your git provider
+- Configure authentication tokens through the workflow interface
+- Automatically set up Git LFS for large files
+
+### How to use the workflow:
+
+1. **Go to the Actions tab** in your GitHub repository
+2. **Select "Firmware Dump Workflow"** from the workflow list
+3. **Click "Run workflow"** button
+4. **Fill in the required parameters:**
+   - **Firmware URL**: Direct download link to the firmware file
+   - **Git Provider**: Choose between `github` or `gitlab`
+   - **Authentication tokens**: Based on your provider selection:
+     - For GitHub: Provide `github_token` and optionally `github_orgname`
+     - For GitLab: Provide `gitlab_token` and optionally `gitlab_group` and `gitlab_instance`
+   - **Optional**: Telegram tokens for notifications
+
+### Workflow Features:
+
+- ✅ **Automated dependency installation** using the existing setup.sh script
+- ✅ **Git LFS configuration** for handling large firmware files
+- ✅ **Disk space optimization** by cleaning up unnecessary packages
+- ✅ **8-hour timeout** for large firmware processing
+- ✅ **Automatic cleanup** of sensitive authentication data
+- ✅ **Debug artifacts** uploaded on failure for troubleshooting
+
+### Environment Variables Configured:
+
+The workflow automatically configures the following based on your selections:
+- `PUSH_TO_GITLAB`: Set to `true` when GitLab is selected, `false` for GitHub
+- Git configuration with appropriate user email and name
+- HTTP buffer settings for large file uploads
+
+### Security Notes:
+
+- All authentication tokens are handled securely through GitHub Actions secrets
+- Token files are automatically cleaned up after the workflow completes
+- No sensitive data is logged or stored in artifacts
+
+## How to use it to Upload the Dump in GitHub (Local Setup)
 
 - Copy your GITHUB_TOKEN in a file named .github_token and add your GitHub Organization name in another file named .github_orgname inside the project directory.
   - If only Token is given but Organization is not, your Git Username will be used.
