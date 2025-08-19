@@ -1,0 +1,160 @@
+name: Firmware Dump Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      firmware_url:
+        description: 'Firmware URL to dump'
+        required: true
+        type: string
+      git_provider:
+        description: 'Git provider to upload the dump'
+        required: true
+        type: choice
+        options:
+          - github
+          - gitlab
+        default: github
+      github_token:
+        description: 'GitHub Token (required if using GitHub provider)'
+        required: false
+        type: string
+      github_orgname:
+        description: 'GitHub Organization Name (optional, uses username if not provided)'
+        required: false
+        type: string
+      gitlab_token:
+        description: 'GitLab Token (required if using GitLab provider)'
+        required: false
+        type: string
+      gitlab_group:
+        description: 'GitLab Group Name (optional, uses username if not provided)'
+        required: false
+        type: string
+      gitlab_instance:
+        description: 'GitLab Instance URL (default: gitlab.com)'
+        required: false
+        type: string
+        default: 'gitlab.com'
+      telegram_token:
+        description: 'Telegram Bot Token (optional, for notifications)'
+        required: false
+        type: string
+      telegram_chat_id:
+        description: 'Telegram Chat/Channel ID (optional, for notifications)'
+        required: false
+        type: string
+
+env:
+  PUSH_TO_GITLAB: ${{ inputs.git_provider == 'gitlab' }}
+
+jobs:
+  dump-firmware:
+    runs-on: ubuntu-latest
+    timeout-minutes: 480  # 8 hours timeout for large firmware files
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Free up disk space
+      run: |
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /opt/ghc
+        sudo rm -rf "/usr/local/share/boost"
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+        sudo apt-get remove -y '^aspnetcore-.*'
+        sudo apt-get remove -y '^dotnet-.*'
+        sudo apt-get remove -y '^llvm-.*'
+        sudo apt-get remove -y 'php.*'
+        sudo apt-get autoremove -y
+        sudo apt-get clean
+        df -h
+        
+    - name: Set up Git LFS
+      run: |
+        git lfs install --global
+        
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo chmod +x setup.sh
+        ./setup.sh
+        
+    - name: Configure Git
+      run: |
+        git config --global user.email "action@github.com"
+        git config --global user.name "GitHub Action"
+        git config --global http.postBuffer 524288000
+        
+    - name: Validate inputs
+      run: |
+        if [[ "${{ inputs.git_provider }}" == "github" ]]; then
+          if [[ -z "${{ inputs.github_token }}" ]]; then
+            echo "Error: GitHub token is required when using GitHub provider"
+            exit 1
+          fi
+        elif [[ "${{ inputs.git_provider }}" == "gitlab" ]]; then
+          if [[ -z "${{ inputs.gitlab_token }}" ]]; then
+            echo "Error: GitLab token is required when using GitLab provider"
+            exit 1
+          fi
+        fi
+        
+    - name: Setup authentication tokens
+      run: |
+        # Create token files based on provider selection
+        if [[ "${{ inputs.git_provider }}" == "github" ]]; then
+          echo "${{ inputs.github_token }}" > .github_token
+          if [[ -n "${{ inputs.github_orgname }}" ]]; then
+            echo "${{ inputs.github_orgname }}" > .github_orgname
+          fi
+          # Remove GitLab token file if it exists
+          rm -f .gitlab_token
+        elif [[ "${{ inputs.git_provider }}" == "gitlab" ]]; then
+          echo "${{ inputs.gitlab_token }}" > .gitlab_token
+          if [[ -n "${{ inputs.gitlab_group }}" ]]; then
+            echo "${{ inputs.gitlab_group }}" > .gitlab_group
+          fi
+          if [[ -n "${{ inputs.gitlab_instance }}" ]]; then
+            echo "${{ inputs.gitlab_instance }}" > .gitlab_instance
+          fi
+          # Remove GitHub token file if it exists
+          rm -f .github_token
+        fi
+        
+        # Setup Telegram tokens if provided
+        if [[ -n "${{ inputs.telegram_token }}" ]]; then
+          echo "${{ inputs.telegram_token }}" > .tg_token
+        fi
+        if [[ -n "${{ inputs.telegram_chat_id }}" ]]; then
+          echo "${{ inputs.telegram_chat_id }}" > .tg_chat
+        fi
+        
+    - name: Set PUSH_TO_GITLAB environment variable
+      run: |
+        if [[ "${{ inputs.git_provider }}" == "gitlab" ]]; then
+          echo "PUSH_TO_GITLAB=true" >> $GITHUB_ENV
+        else
+          echo "PUSH_TO_GITLAB=false" >> $GITHUB_ENV
+        fi
+        
+    - name: Run firmware dumper
+      run: |
+        chmod +x dumper.sh
+        ./dumper.sh '${{ inputs.firmware_url }}'
+        
+    - name: Cleanup sensitive files
+      if: always()
+      run: |
+        rm -f .github_token .gitlab_token .tg_token .tg_chat .github_orgname .gitlab_group .gitlab_instance
+        
+    - name: Upload artifacts on failure
+      if: failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: debug-logs
+        path: |
+          out/tmp/
+          *.log
+        retention-days: 7
