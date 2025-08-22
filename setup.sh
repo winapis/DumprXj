@@ -83,13 +83,38 @@ fi
 
 sleep 1
 
+# Install Python dependencies
+echo -e ${BLUE}">> Installing Python dependencies..."${NORMAL}
+sleep 1
+if command -v pip3 > /dev/null 2>&1; then
+    pip3 install -r requirements.txt || abort "Python dependencies installation failed!"
+else
+    python3 -m pip install -r requirements.txt || abort "Python dependencies installation failed!"
+fi
+
+# Set up project configuration
+echo -e ${BLUE}">> Setting up project configuration..."${NORMAL}
+sleep 1
+if [ ! -f config.yaml ]; then
+    echo -e ${BLUE}">> Default configuration already exists"${NORMAL}
+fi
+
+# Make dumprx.py executable
+chmod +x dumprx.py
+
 # Install `uv`
 echo -e ${BLUE}">> Installing uv for python packages..."${NORMAL}
 sleep 1
 bash -c "$(curl -sL https://astral.sh/uv/install.sh)" || abort "Setup Failed!"
 
+# Test the installation
+echo -e ${BLUE}">> Testing installation..."${NORMAL}
+sleep 1
+python3 dumprx.py --validate || abort "Installation validation failed!"
+
 # Done!
 echo -e ${GREEN}"Setup Complete!"${NORMAL}
+echo -e ${BLUE}"You can now use: python3 dumprx.py <firmware_file_or_url>"${NORMAL}
 
 # Exit
 exit 0

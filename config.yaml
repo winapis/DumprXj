@@ -1,0 +1,112 @@
+logging:
+  level: "INFO"
+  file: ""
+  max_size: "10MB"
+  backup_count: 5
+
+advanced:
+  max_memory_file_size: 100
+  max_workers: 4
+  experimental: false
+
+git:
+  github:
+    token: ""
+    organization: ""
+  gitlab:
+    token: ""
+    group: ""
+    instance: "gitlab.com"
+
+telegram:
+  token: ""
+  chat_id: "@DumprXDumps"
+  enabled: true
+
+download:
+  user_agents:
+    default: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    mega: "MEGAsync/4.8.8.0"
+  chunk_size: 8192
+  timeout: 300
+  retry_attempts: 3
+  retry_delay: 5
+
+extraction:
+  partitions:
+    - "system"
+    - "system_ext"
+    - "system_other"
+    - "systemex"
+    - "vendor"
+    - "cust"
+    - "odm"
+    - "oem"
+    - "factory"
+    - "product"
+    - "xrom"
+    - "modem"
+    - "dtbo"
+    - "dtb"
+    - "boot"
+    - "vendor_boot"
+    - "recovery"
+    - "tz"
+    - "oppo_product"
+    - "preload_common"
+    - "opproduct"
+    - "reserve"
+    - "india"
+    - "my_preload"
+    - "my_odm"
+    - "my_stock"
+    - "my_operator"
+    - "my_country"
+    - "my_product"
+    - "my_company"
+    - "my_engineering"
+    - "my_heytap"
+    - "my_custom"
+    - "my_manifest"
+    - "my_carrier"
+    - "my_region"
+    - "my_bigball"
+    - "my_version"
+    - "special_preload"
+    - "system_dlkm"
+    - "vendor_dlkm"
+    - "odm_dlkm"
+    - "init_boot"
+    - "vendor_kernel_boot"
+    - "odmko"
+    - "socko"
+    - "nt_log"
+    - "mi_ext"
+    - "hw_product"
+    - "product_h"
+    - "preas"
+    - "preavs"
+  
+  ext4_partitions:
+    - "system"
+    - "vendor"
+    - "cust"
+    - "odm"
+    - "oem"
+    - "factory"
+    - "product"
+    - "xrom"
+    - "systemex"
+    - "oppo_product"
+    - "preload_common"
+    - "hw_product"
+    - "product_h"
+    - "preas"
+    - "preavs"
+
+paths:
+  project_dir: ""
+  input_dir: "input"
+  output_dir: "out"
+  temp_dir: "tmp"
+  utils_dir: "utils"
