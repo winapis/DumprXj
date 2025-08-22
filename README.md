@@ -1,46 +1,153 @@
 <div align="center">
 
-  <h1>DumprX</h1>
+  <h1>DumprX v2.0</h1>
 
-  <h4>Based Upon Phoenix Firmware Dumper from DroidDumps, with some Changes and Improvements</h4>
+  <h4>🚀 Completely Refactored Firmware Dumping Toolkit</h4>
+  <h5>Modular • Modern • Maintainable</h5>
 
 </div>
 
+---
 
-## What this really is
+## ✨ What's New in v2.0
 
-You might've used firmware extractor via dumpyara from https://github.com/AndroidDumps/. This toolkit is revamped edition of the tools with some improvements and feature additions.
+DumprX has been **completely refactored** from the ground up with a modern, modular architecture that makes it more maintainable, extensible, and user-friendly.
 
-## The improvements over dumpyara
+### 🏗️ **Complete Modular Refactoring**
+- **Modular Architecture**: Code split into reusable modules in the `lib/` directory
+- **Consistent UI**: Modern message system with emojis and color-coded output
+- **Error Handling**: Improved error handling and user feedback
+- **Clean Code**: Eliminated code duplication and dead code
 
+### 📦 **New Module System**
+- `lib/ui.sh` - Modern user interface and messaging
+- `lib/utils.sh` - Common utilities and file operations
+- `lib/git.sh` - Git operations and repository management
+- `lib/downloader.sh` - Download functionality for various sources
+- `lib/extractors.sh` - Firmware extraction for different formats
+- `lib/metadata.sh` - Device metadata extraction
+- `lib/setup.sh` - System setup and dependency management
+- `lib/loader.sh` - Centralized module loading system
+
+### 🛠️ **Enhanced Functionality**
+- **Interactive Cleanup**: New `cleanup.sh` utility for workspace management
+- **Better Validation**: Enhanced `validate-workflow.sh` with comprehensive checks
+- **Improved Setup**: More robust dependency installation across different Linux distributions
+- **Smart Detection**: Better firmware format detection and processing
+
+---
+
+## 🚀 Quick Start
+
+### 1. **Setup Dependencies**
+```bash
+./setup.sh
+```
+
+### 2. **Run Firmware Extraction**
+```bash
+./dumper.sh 'Firmware File/Extracted Folder -OR- Supported Website Link'
+```
+
+### 3. **Clean Workspace (Optional)**
+```bash
+./cleanup.sh --help  # See cleanup options
+```
+
+---
+
+## 🔧 **What this really is**
+
+You might've used firmware extractor via dumpyara from https://github.com/AndroidDumps/. This toolkit is a **completely refactored** edition with significant improvements and modern architecture.
+
+## 📈 **Improvements over dumpyara**
+
+### **v2.0 Refactoring Benefits**
+- [x] **Modular Architecture**: Complete code restructuring with reusable modules
+- [x] **Modern UI**: Emoji-based messages with consistent color coding
+- [x] **Better Error Handling**: Comprehensive error checking and user feedback
+- [x] **Code Quality**: Eliminated duplication, improved maintainability
+- [x] **Enhanced Functionality**: New utilities and improved workflows
+
+### **Original Improvements (Still Included)**
 - [x] dumpyara's and firmware_extractor's scripts are merged with handpicked shellcheck-ed and pylint-ed improvements
 - [x] The script can download and dump firmware from different filehosters such as Mega.NZ, Mediafire.com, AndroidFileHost.com and from Google Drive URLs
 - [x] File as-well-as Folder as an input is processed thoroughly to check all kinds of supported firmware types
-- [x] All the external tools are now inherited into one place and unnesessary files removed
+- [x] All the external tools are now inherited into one place and unnecessary files removed
 - [x] Binary tools are updated to latest available source
 - [x] LG KDZ utilities are updated to support latest firmwares
 - [x] Installation requirements are narrowed down to minimal for playing with this toolkit
 - [x] Recovery Dump is made too
 
-## Recommendations before Playing with Firmware Dumper
+---
 
-This toolkit can run in any Debian/Ubuntu distribution, Ubuntu Bionic and Focal would be best, other versions are not tested.
+## 🔧 **System Requirements & Setup**
 
-Support for Alpine Linux is added and tested. You can give it a try.
+This toolkit supports multiple Linux distributions and has been tested on:
 
-For any other UNIX Distributions, please refer to internal [Setup File](setup.sh) and install the required programs via their own package manager.
+### **Supported Systems**
+- **Ubuntu/Debian** (18.04+)
+- **Fedora** (30+)
+- **RHEL/CentOS** (7+)
+- **Arch Linux**
+- **openSUSE**
+- **Alpine Linux**
+- **macOS** (with Homebrew)
 
-## Prepare toolkit dependencies / requirements
+### **Automated Setup**
+The setup script automatically detects your system and installs the required dependencies:
 
-To prepare for this toolkit, run [Setup File](setup.sh) at first, which is needed only one time. After that, run [Main Script](dumper.sh) with proper argument.
+```bash
+./setup.sh
+```
 
-## Usage
+### **Manual Requirements**
+If you prefer manual installation, you'll need:
+- `unrar`, `zip`, `unzip`, `p7zip`
+- `python3`, `git`, `aria2`, `wget`
+- `brotli`, `lz4`, `xz`
+- `device-tree-compiler` (dtc)
+- `git-lfs` for large file support
 
-Run this toolkit with proper firmware file/folder path or URL
+---
 
+## 📖 **Usage Guide**
+
+### **Basic Usage**
 ```bash
 ./dumper.sh 'Firmware File/Extracted Folder -OR- Supported Website Link'
 ```
+
+### **Examples**
+```bash
+# Local firmware file
+./dumper.sh /path/to/firmware.zip
+
+# Direct download URL
+./dumper.sh 'https://example.com/firmware.zip'
+
+# Mega.nz link
+./dumper.sh 'https://mega.nz/file/...'
+
+# AndroidFileHost link
+./dumper.sh 'https://androidfilehost.com/?fid=...'
+```
+
+### **Additional Utilities**
+
+#### **Cleanup Workspace**
+```bash
+./cleanup.sh --help     # See all cleanup options
+./cleanup.sh --all      # Full cleanup
+./cleanup.sh            # Interactive mode
+```
+
+#### **Validate Workflow**
+```bash
+./validate-workflow.sh  # Check GitHub Actions setup
+```
+
+---
 
 Help Context:
 
