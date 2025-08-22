@@ -1,3 +1,6 @@
+# DumprX .gitignore - Updated and comprehensive
+
+# Sensitive files - tokens and credentials
 .github_token
 .github_orgname
 .gitlab_token
@@ -5,11 +8,96 @@
 .gitlab_instance
 .tg_token
 .tg_chat
+github_token
+gitlab_token
+tg_token
+tg_chat
+
+# Backup files
+*.backup
+*.bak
+*.orig
+
+# Temporary files and directories
 .venv/
 input/
 tmp/
 out/
 *.pyc
 __pycache__
+
+# External tools (downloaded during runtime)
 utils/oppo_*
 utils/vmlinux*
+utils/android_tools*
+utils/pacextractor*
+
+# Temporary files
+*.tmp
+*.temp
+*~
+.DS_Store
+Thumbs.db
+
+# Build artifacts and extracted files
+*.img
+*.bin
+*.dat
+*.pac
+*.nb0
+*.sin
+*.kdz
+*.ozip
+*.ops
+*.ofp
+super.img
+payload.bin
+UPDATE.APP
+
+# Archive files
+*.zip
+*.rar
+*.7z
+*.tar
+*.tar.gz
+*.tgz
+*.tar.md5
+
+# Sensitive firmware files
+*sensetime*
+*.lic
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.env
+
+# Virtual environments
+.venv/
+ENV/
+env/
+venv/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test files
+test_*
+*.test
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

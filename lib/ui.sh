@@ -2,23 +2,25 @@
 # DumprX UI Module - Banner, colors, and messaging system
 # Provides consistent UI elements across all scripts
 
-# Color definitions
-declare -r RED='\033[0;31m'
-declare -r GREEN='\033[0;32m'
-declare -r YELLOW='\033[0;33m'
-declare -r BLUE='\033[0;34m'
-declare -r PURPLE='\033[0;35m'
-declare -r CYAN='\033[0;36m'
-declare -r WHITE='\033[0;37m'
-declare -r BOLD='\033[1m'
-declare -r NC='\033[0m' # No Color
-
-# Message types
-declare -r MSG_INFO="ℹ"
-declare -r MSG_SUCCESS="✅"
-declare -r MSG_WARNING="⚠"
-declare -r MSG_ERROR="❌"
-declare -r MSG_PROCESS="🔄"
+# Color definitions (only declare if not already set)
+if [[ -z "${RED:-}" ]]; then
+    readonly RED='\033[0;31m'
+    readonly GREEN='\033[0;32m'
+    readonly YELLOW='\033[0;33m'
+    readonly BLUE='\033[0;34m'
+    readonly PURPLE='\033[0;35m'
+    readonly CYAN='\033[0;36m'
+    readonly WHITE='\033[0;37m'
+    readonly BOLD='\033[1m'
+    readonly NC='\033[0m' # No Color
+    
+    # Message types
+    readonly MSG_INFO="ℹ"
+    readonly MSG_SUCCESS="✅"
+    readonly MSG_WARNING="⚠"
+    readonly MSG_ERROR="❌"
+    readonly MSG_PROCESS="🔄"
+fi
 
 # Clear screen function
 clear_screen() {

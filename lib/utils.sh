@@ -14,7 +14,8 @@ declare -g TMPDIR
 
 # Initialize project directories
 init_directories() {
-    PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[1]}")" >/dev/null && pwd)"
+    # Use the directory of the main script that sourced this module
+    PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[2]}")" >/dev/null && pwd)"
     
     # Validate project directory path
     if echo "${PROJECT_DIR}" | grep -q " "; then
