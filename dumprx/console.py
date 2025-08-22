@@ -45,13 +45,20 @@ def setup_logging():
 
 def _parse_size(size_str):
     units = {'B': 1, 'KB': 1024, 'MB': 1024**2, 'GB': 1024**3}
-    size_str = size_str.upper()
+    size_str = str(size_str).upper().strip()
     
     for unit, multiplier in units.items():
         if size_str.endswith(unit):
-            return int(size_str[:-len(unit)]) * multiplier
+            number_part = size_str[:-len(unit)]
+            try:
+                return int(number_part) * multiplier
+            except ValueError:
+                pass
     
-    return int(size_str)
+    try:
+        return int(size_str)
+    except ValueError:
+        return 10 * 1024 * 1024  # Default 10MB
 
 
 def print_banner():
