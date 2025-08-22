@@ -1,0 +1,33 @@
+logging:
+  level: "INFO"
+  file: ""
+  max_size: "10MB"
+  backup_count: 5
+
+advanced:
+  max_memory_file_size: 100
+  max_workers: 4
+  experimental: false
+
+git:
+  github:
+    token: ""
+    organization: ""
+  gitlab:
+    token: ""
+    group: ""
+    instance: "gitlab.com"
+
+telegram:
+  token: ""
+  chat_id: "@DumprXDumps"
+  enabled: true
+
+download:
+  user_agents:
+    default: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    mega: "MEGAsync/4.8.8.0"
+  chunk_size: 8192
+  timeout: 300
+  retry_attempts: 3
+  retry_delay: 5

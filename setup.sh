@@ -88,8 +88,25 @@ echo -e ${BLUE}">> Installing uv for python packages..."${NORMAL}
 sleep 1
 bash -c "$(curl -sL https://astral.sh/uv/install.sh)" || abort "Setup Failed!"
 
+# Add uv to PATH for current session
+export PATH="$HOME/.cargo/bin:$PATH"
+
+# Install Python dependencies
+echo -e ${BLUE}">> Installing Python dependencies..."${NORMAL}
+sleep 1
+if command -v uv >/dev/null 2>&1; then
+    uv pip install --system -r requirements.txt || pip3 install -r requirements.txt || abort "Python dependencies installation failed!"
+else
+    pip3 install -r requirements.txt || abort "Python dependencies installation failed!"
+fi
+
+# Create lib/__init__.py to make it a proper Python package
+echo -e ${BLUE}">> Setting up Python package structure..."${NORMAL}
+touch lib/__init__.py
+
 # Done!
 echo -e ${GREEN}"Setup Complete!"${NORMAL}
+echo -e ${GREEN}"You can now run: ./dumprx.py <firmware_file_or_url>"${NORMAL}
 
 # Exit
 exit 0
