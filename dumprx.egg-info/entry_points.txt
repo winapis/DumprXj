@@ -1,2 +1,0 @@
-[console_scripts]
-dumprx = dumprx.cli:cli

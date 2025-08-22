@@ -11,6 +11,7 @@ from rich.console import Console
 
 from dumprx.core.config import Config
 from dumprx.core.external_tools import ExternalToolsManager
+from dumprx.core.device_detector import DeviceDetector
 from dumprx.extractors.firmware_detector import FirmwareDetector
 from dumprx.utils.ui import print_info, print_error, print_success, print_warning
 
@@ -23,6 +24,7 @@ class FirmwareDumper:
         self.config = config
         self.external_tools = ExternalToolsManager(config)
         self.detector = FirmwareDetector(config)
+        self.device_detector = DeviceDetector(config)
         
     def setup(self):
         """Setup directories and external tools"""
@@ -378,7 +380,21 @@ class FirmwareDumper:
         # Move extracted images to output directory
         for img_file in self.config.tmp_dir.glob("*.img"):
             print_info(f"Found partition: {img_file.name}")
+        
+        # Auto-detect device configuration
+        print_info("🔍 Auto-detecting device configuration...")
+        device_info = self.device_detector.detect_device_config(self.config.tmp_dir)
+        
+        if device_info:
+            self.device_detector.print_device_summary()
             
+            # Create README with device information
+            readme_content = self.device_detector.get_readme_content()
+            readme_path = self.config.out_dir / "README.md"
+            with open(readme_path, 'w') as f:
+                f.write(readme_content)
+            print_success(f"📄 Device README created: {readme_path}")
+        
         # Additional processing can be added here
         # - Convert images to different formats
         # - Extract file systems

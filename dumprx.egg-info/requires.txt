@@ -1,9 +1,0 @@
-click>=8.0.0
-rich>=13.0.0
-requests>=2.25.0
-
-[dev]
-pytest>=6.0
-black
-isort
-flake8
