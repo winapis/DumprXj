@@ -1,0 +1,47 @@
+# DumprX Python Dependencies
+# Core utilities
+requests>=2.31.0
+click>=8.1.0
+rich>=13.0.0
+colorama>=0.4.6
+humanize>=4.7.0
+psutil>=5.9.0
+pycryptodome>=3.15.0
+
+# Compression and archives
+rarfile>=4.1
+py7zr>=0.20.0
+patoolib>=1.12.0
+
+# Download services
+mega.py>=1.0.8
+gdown>=4.7.1
+pyodrive>=0.1.20
+dropbox>=11.36.0
+
+# Telegram bot
+python-telegram-bot>=20.5
+
+# File processing
+python-magic>=0.4.27
+lxml>=4.9.3
+pyyaml>=6.0.1
+
+# Android specific
+adb-shell>=0.4.4
+
+# Progress and CLI
+tqdm>=4.66.0
+tabulate>=0.9.0
+
+# Compression formats
+lz4>=4.3.2
+zstandard>=0.21.0
+brotli>=1.0.9
+
+# Development and testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+black>=23.7.0
+flake8>=6.0.0
+mypy>=1.5.0

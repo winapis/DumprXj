@@ -21,6 +21,9 @@ You might've used firmware extractor via dumpyara from https://github.com/Androi
 - [x] LG KDZ utilities are updated to support latest firmwares
 - [x] Installation requirements are narrowed down to minimal for playing with this toolkit
 - [x] Recovery Dump is made too
+- [x] **NEW: Complete Python refactoring** with modular architecture and enhanced features
+- [x] **NEW: YAML configuration system** for user customization
+- [x] **NEW: Enhanced manufacturer support** with intelligent auto-detection
 
 ## Recommendations before Playing with Firmware Dumper
 
@@ -32,14 +35,35 @@ For any other UNIX Distributions, please refer to internal [Setup File](setup.sh
 
 ## Prepare toolkit dependencies / requirements
 
-To prepare for this toolkit, run [Setup File](setup.sh) at first, which is needed only one time. After that, run [Main Script](dumper.sh) with proper argument.
+To prepare for this toolkit, run [Setup File](setup.sh) at first, which is needed only one time. After that, run [Main Script](dumper.py) with proper argument.
+
+```bash
+# Install dependencies
+./setup.sh
+
+# Extract firmware using the new Python dumper
+./dumper.py 'Firmware File/Extracted Folder -OR- Supported Website Link'
+```
 
 ## Usage
 
 Run this toolkit with proper firmware file/folder path or URL
 
 ```bash
-./dumper.sh 'Firmware File/Extracted Folder -OR- Supported Website Link'
+./dumper.py 'Firmware File/Extracted Folder -OR- Supported Website Link'
+```
+
+### Command Line Options
+
+```bash
+./dumper.py [OPTIONS] INPUT_PATH
+
+Options:
+  -o, --output PATH    Output directory
+  -v, --verbose        Enable verbose logging  
+  --debug             Enable debug logging
+  --version           Show version information
+  --help              Show this message and exit
 ```
 
 Help Context:
@@ -57,6 +81,32 @@ Help Context:
          *.emmc.img | *.img.ext4 | system.bin | system-p | payload.bin
          *.nb0 | .*chunk* | *.pac | *super*.img | *system*.sin
 ```
+
+## Configuration
+
+The toolkit now uses a YAML configuration file (`config.yaml`) that allows users to customize:
+
+- Directory paths for input, output, utilities, and temporary files
+- External tool repositories and versions
+- Supported partitions and file mappings
+- Logging preferences
+- Download settings
+- Telegram bot integration (optional)
+
+You can modify `config.yaml` to adapt the toolkit to your specific needs.
+
+## Manufacturer Support
+
+The Python refactoring provides enhanced support for:
+
+- **Samsung**: TAR.MD5 and PIT files with MD5 verification
+- **Xiaomi**: MIUI packages and Fastboot images with payload extraction
+- **OPPO/OnePlus**: OZIP, OFP, OPS decryption with auto-detection
+- **Huawei**: UPDATE.APP packages with complete extraction
+- **LG**: KDZ/DZ files with modern firmware support
+- **HTC**: RUU decryption for system and firmware partitions
+- **Sony**: FTF/SIN processing with automatic conversion
+- **Generic**: Fallback extraction for unknown formats
 
 ## GitHub Actions Workflow Usage
 
@@ -85,7 +135,7 @@ You can now use the automated GitHub Actions workflow to dump firmware automatic
 - ✅ **Automated dependency installation** using the existing setup.sh script
 - ✅ **Git LFS configuration** for handling large firmware files
 - ✅ **Disk space optimization** by cleaning up unnecessary packages
-- ✅ **8-hour timeout** for large firmware processing
+- ✅ **10-hour timeout** for large firmware processing
 - ✅ **Automatic cleanup** of sensitive authentication data
 - ✅ **Debug artifacts** uploaded on failure for troubleshooting
 
@@ -98,67 +148,50 @@ The workflow automatically configures the following based on your selections:
 
 ### Security Notes:
 
-- All authentication tokens are handled securely through GitHub Actions secrets
-- Token files are automatically cleaned up after the workflow completes
-- No sensitive data is logged or stored in artifacts
+- All authentication tokens are handled securely through GitHub's secrets mechanism
+- Tokens are automatically cleared from the environment after use
+- The workflow includes cleanup steps to prevent token leakage
 
-## How to use it to Upload the Dump in GitHub (Local Setup)
+## Architecture
 
-- Copy your GITHUB_TOKEN in a file named .github_token and add your GitHub Organization name in another file named .github_orgname inside the project directory.
-  - If only Token is given but Organization is not, your Git Username will be used.
-- Copy your Telegram Token in a file named .tg_token and Telegram Chat/Channel ID in another file named .tg_chat file if you want to publish the uploading info in Telegram.
+The toolkit has been refactored into a modular Python architecture:
 
-## Main Scripture Credit
+```
+src/dumprx/
+├── core/          # Main extraction engine, config, logging
+├── manufacturers/ # Manufacturer-specific extraction modules
+├── downloaders/   # Download service implementations
+├── boot/          # Boot image analysis capabilities
+├── utils/         # File and archive utilities
+└── telegram/      # Future bot integration support
+```
 
-As mentioned above, this toolkit is entirely focused on improving the Original Firmware Dumper available:  [Dumpyara](https://github.com/AndroidDumps/) [Phoenix Firmware Dumper](https://github.com/DroidDumps)
+This modular design allows for easy extension and maintenance while providing a clean API for firmware extraction operations.
 
-Credit for those tools goes to everyone whosoever worked hard to put all those programs in one place to make an awesome project.
+## Requirements
 
-## Download Utilities Credits
+### System Requirements
+- Python 3.8 or higher
+- Debian/Ubuntu-based Linux distribution (recommended)
+- At least 20GB free disk space for large firmware files
 
-- mega-media-drive_dl.sh (for downloading from mega.nz, mediafire.com, google drive)
-  - shell script, most of it's part belongs to badown by @stck-lzm
-- afh_dl (for downloading from androidfilehosts.com)
-  - python script, by @kade-robertson
-- aria2c
-- wget
+### Python Dependencies
+- Click (for CLI interface)
+- PyYAML (for configuration management)
+- Requests (for download functionality)
+- Additional dependencies as listed in `requirements.txt`
 
-## Internal Utilities Credits
+### System Packages
+The setup script will install required system packages including:
+- Archive extraction tools (7zip, unrar, etc.)
+- Python development tools
+- Build essentials for compiling utilities
+- Device tree compiler and other firmware tools
 
-- sdat2img.py (system-dat-to-img v1.2, python script)
-  - by @xpirt, @luxi78, @howellzhu
-- simg2img (Android sparse-to-raw images converter, binary built from source)
-  - by @anestisb
-- unsin (Xperia Firmware Unpacker v1.13, binary)
-  - by @IgorEisberg
-- extract\_android\_ota\_payload.py (OTA Payload Extractor, python script)
-  - by @cyxx, with metadata update from [Android's update_engine Git Repository](https://android.googlesource.com/platform/system/update_engine/)
-- extract-dtb.py (dtbs extractor v1.3, python script)
-  - by @PabloCastellano
-- dtc (Device Tree Compiler v1.6, binary built from source)
-  - by kernel.org, from their [dtc Git Repository](https://git.kernel.org/pub/scm/utils/dtc/dtc.git)
-- vmlinux-to-elf and kallsyms_finder (kernel binary to analyzable ELF converter, python scripts)
-  - by @marin-m
-- ozipdecrypt.py (Oppo/Oneplus .ozip Firmware decrypter v1.2, python script)
-  - by @bkerler
-- ofp\_qc\_extract.py and ofp\_mtk\_decrypt.py (Oppo .ofp firmware extractor, python scripts)
-  - by @bkerler
-- opscrypto.py (OnePlus/Oppo ops firmware extractor, python script)
-  - by @bkerler
-- lpunpack (OnePlus/Other super.img unpacker, binary built from source)
-  - by @LonelyFool
-- splituapp.py (UPDATE.APP extractor, python script)
-  - by @superr
-- pacextractor (Extractor of SpreadTrum firmware files with extension pac. See)
-  - by @HemanthJabalpuri
-- nb0-extract (Nokia/Sharp/Infocus/Essential nb0-extract, binary built from source)
-  - by Heineken @Eddie07 / "FIH mobile"
-- kdztools' unkdz.py and undz.py (LG KDZ and DZ Utilities, python scripts)
-  - Originally by IOMonster (thecubed on XDA), Modified by @ehem (Elliott Mitchell) and improved by @steadfasterX
-- RUU\_Decrypt\_Tool (HTC RUU/ROM Decryption Tool v3.6.8, binary)
-  - by @nkk71 and @CaptainThrowback
-- extract-ikconfig (.config file extractor from kernel image, shell script)
-  - From within linux's source code by @torvalds
-- unpackboot.sh (bootimg and ramdisk extractor, modified shell script)
-  - Originally by @xiaolu and @carlitros900, stripped to unpack functionallity, by me @rokibhasansagar
-- twrpdtgen by @SebaUbuntu
+## Contributing
+
+Contributions are welcome! Please feel free to submit issues and pull requests to improve the toolkit.
+
+## License
+
+This project is licensed under the GPL v3 License - see the [LICENSE](LICENSE) file for details.

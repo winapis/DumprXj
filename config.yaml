@@ -1,0 +1,136 @@
+# DumprX Configuration File
+# Users can customize these settings according to their needs
+
+# Directory Configuration
+directories:
+  # Project root directory (auto-detected if not specified)
+  project_dir: null
+  # Input directory for firmware files
+  input_dir: "input"
+  # Utilities directory containing tools and scripts  
+  utils_dir: "utils"
+  # Output directory for extracted firmware
+  output_dir: "output"
+  # Temporary directory for processing
+  tmp_dir: "tmp"
+
+# External Tools (GitHub repositories)
+external_tools:
+  oppo_ozip_decrypt: "bkerler/oppo_ozip_decrypt"
+  oppo_decrypt: "bkerler/oppo_decrypt"
+  vmlinux-to-elf: "marin-m/vmlinux-to-elf"
+  android_tools: "ShivamKumarJha/android_tools"
+  pacextractor: "HemanthJabalpuri/pacextractor"
+
+# Supported Partitions
+partitions:
+  # Standard Android partitions
+  - "system"
+  - "system_ext"
+  - "system_other"
+  - "systemex"
+  - "vendor"
+  - "cust"
+  - "odm"
+  - "oem"
+  - "factory"
+  - "product"
+  - "xrom"
+  - "modem"
+  - "dtbo"
+  - "dtb"
+  - "boot"
+  - "vendor_boot"
+  - "recovery"
+  - "tz"
+  
+  # OPPO/OnePlus specific partitions
+  - "oppo_product"
+  - "preload_common"
+  - "opproduct"
+  - "reserve"
+  - "india"
+  
+  # Xiaomi specific partitions
+  - "my_preload"
+  - "my_odm"
+  - "my_stock"
+  - "my_operator"
+  - "my_country"
+  - "my_product"
+  - "my_company"
+  - "my_engineering"
+  - "my_heytap"
+  - "my_custom"
+  - "my_manifest"
+  - "my_carrier"
+  - "my_region"
+  - "my_bigball"
+  - "my_version"
+  - "special_preload"
+  - "mi_ext"
+  
+  # Additional partitions
+  - "system_dlkm"
+  - "vendor_dlkm"
+  - "odm_dlkm"
+  - "init_boot"
+  - "vendor_kernel_boot"
+  - "odmko"
+  - "socko"
+  - "nt_log"
+  
+  # Huawei specific partitions
+  - "hw_product"
+  - "product_h"
+  - "preas"
+  - "preavs"
+
+# EXT4 Partitions (for filesystem extraction)
+ext4_partitions:
+  - "system"
+  - "vendor"
+  - "cust"
+  - "odm"
+  - "oem"
+  - "factory"
+  - "product"
+  - "xrom"
+  - "systemex"
+  - "oppo_product"
+  - "preload_common"
+  - "hw_product"
+  - "product_h"
+  - "preas"
+  - "preavs"
+
+# Other partition mappings (filename -> partition name)
+other_partitions:
+  "tz.mbn": "tz"
+  "tz.img": "tz"
+  "modem.img": "modem"
+  "NON-HLOS": "modem"
+  "boot-verified.img": "boot"
+  "recovery-verified.img": "recovery"
+  "dtbo-verified.img": "dtbo"
+
+# Logging Configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  use_colors: true
+  use_emojis: true
+  show_progress: true
+
+# Download Configuration
+download:
+  chunk_size: 8192
+  max_retries: 3
+  timeout: 30
+  user_agent: "DumprX/2.0"
+
+# Telegram Bot Configuration (optional)
+telegram:
+  enabled: false
+  token: ""
+  chat_id: ""
+  queue_size: 10

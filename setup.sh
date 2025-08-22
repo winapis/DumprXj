@@ -83,13 +83,30 @@ fi
 
 sleep 1
 
-# Install `uv`
-echo -e ${BLUE}">> Installing uv for python packages..."${NORMAL}
+# Install Python dependencies
+echo -e ${BLUE}">> Installing Python dependencies..."${NORMAL}
 sleep 1
-bash -c "$(curl -sL https://astral.sh/uv/install.sh)" || abort "Setup Failed!"
+
+# Install with uv if available, fallback to pip
+if command -v uv > /dev/null 2>&1; then
+    echo -e ${BLUE}">> Using uv to install Python packages..."${NORMAL}
+    uv pip install --system -r requirements.txt || abort "Python package installation failed!"
+else
+    echo -e ${BLUE}">> Using pip to install Python packages..."${NORMAL}
+    python3 -m pip install --user -r requirements.txt || abort "Python package installation failed!"
+fi
+
+sleep 1
+
+# Verify Python installation
+echo -e ${BLUE}">> Verifying Python installation..."${NORMAL}
+python3 -c "import yaml, click, requests; print('Python dependencies verified')" || abort "Python verification failed!"
+
+sleep 1
 
 # Done!
 echo -e ${GREEN}"Setup Complete!"${NORMAL}
+echo -e ${GREEN}"You can now use: ./dumper.py <firmware_file_or_url>"${NORMAL}
 
 # Exit
 exit 0
