@@ -81,6 +81,11 @@ jobs:
         sudo chmod +x setup.sh
         ./setup.sh
         
+    - name: Install Python dependencies
+      run: |
+        python3 -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
     - name: Configure Git
       run: |
         git config --global user.email "action@github.com"
@@ -141,8 +146,8 @@ jobs:
         
     - name: Run firmware dumper
       run: |
-        chmod +x dumper.sh
-        ./dumper.sh '${{ inputs.firmware_url }}'
+        chmod +x dumprx.py
+        python3 dumprx.py '${{ inputs.firmware_url }}'
         
     - name: Cleanup sensitive files
       if: always()

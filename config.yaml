@@ -1,0 +1,45 @@
+# Logging settings
+logging:
+  level: "INFO"           # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: ""                # Leave empty to log to console only
+  max_size: "10MB"        # Max log file size before rotation
+  backup_count: 5         # Number of backup log files to keep
+
+# Console output settings
+console:
+  colors: true            # Enable colored output
+  progress_bars: true     # Show progress bars for operations
+  banner: true            # Show ASCII art banner
+  emoji: true             # Use emoji in output messages
+
+# Advanced settings
+advanced:
+  max_memory_file_size: 100   # Maximum file size for in-memory operations (in MB)
+  max_workers: 4              # Number of parallel extraction workers
+  experimental: false         # Enable experimental features
+
+git:
+  github:
+    token: ""                 # GitHub token (can be set via file .github_token)
+    organization: ""          # GitHub organization (can be set via file .github_orgname)
+  gitlab:
+    token: ""                 # GitLab token (can be set via file .gitlab_token)
+    group: ""                 # GitLab group (can be set via file .gitlab_group)
+    instance: "gitlab.com"    # GitLab instance (can be set via file .gitlab_instance)
+
+# Telegram bot settings
+telegram:
+  token: ""                   # Telegram bot token (can be set via file .tg_token)
+  chat_id: "@DumprXDumps"     # Telegram chat/channel ID (can be set via file .tg_chat)
+  enabled: true               # Enable/disable Telegram notifications
+
+# Download settings
+download:
+  user_agents:
+    default: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    mega: "MEGAsync/4.8.8.0"
+  chunk_size: 8192
+  timeout: 300
+  retry_attempts: 3
+  retry_delay: 5
