@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dumprx"
+version = "2.0.0"
+description = "Advanced firmware extraction and dumping toolkit with modern CLI"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "DumprX Team"},
+]
+keywords = ["firmware", "android", "extraction", "dumping", "tools"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: System :: Archiving",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "click>=8.0.0",
+    "rich>=13.0.0",
+    "requests>=2.25.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=6.0",
+    "black",
+    "isort",
+    "flake8",
+]
+
+[project.urls]
+Homepage = "https://github.com/winapis/DumprXj"
+Repository = "https://github.com/winapis/DumprXj"
+Issues = "https://github.com/winapis/DumprXj/issues"
+
+[project.scripts]
+dumprx = "dumprx.cli:cli"
+
+[tool.setuptools.packages.find]
+include = ["dumprx*"]
+
+[tool.setuptools.package-data]
+dumprx = ["*.txt", "*.md"]
+
+[tool.black]
+line-length = 100
+target-version = ['py38']
+
+[tool.isort]
+profile = "black"
+line_length = 100
