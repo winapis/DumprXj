@@ -1,0 +1,79 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dumprx"
+version = "2.0.0"
+description = "Advanced Android Firmware Extraction Toolkit"
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [
+    {name = "DumprX Contributors"}
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: System :: Archiving",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "click>=8.0.0",
+    "requests>=2.25.0",
+    "PyYAML>=6.0",
+    "rich>=12.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=22.0.0",
+    "flake8>=4.0.0",
+    "mypy>=0.991",
+    "pre-commit>=2.15.0",
+]
+
+[project.scripts]
+dumprx = "dumprx.cli:main"
+
+[project.urls]
+"Homepage" = "https://github.com/Eduardob3677/DumprX"
+"Bug Reports" = "https://github.com/Eduardob3677/DumprX/issues"
+"Source" = "https://github.com/Eduardob3677/DumprX"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+include = '\.pyi?$'
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v --strict-markers"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+]

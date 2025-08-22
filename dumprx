@@ -1,0 +1,18 @@
+#!/usr/bin/env python3
+"""
+DumprX CLI Wrapper - Provides the dumprx command.
+"""
+
+import sys
+import os
+from pathlib import Path
+
+# Add src directory to Python path
+src_dir = Path(__file__).parent / "src"
+sys.path.insert(0, str(src_dir))
+
+# Import and run CLI
+from dumprx.cli import main
+
+if __name__ == "__main__":
+    main()
