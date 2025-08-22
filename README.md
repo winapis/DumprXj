@@ -1,32 +1,231 @@
 <div align="center">
 
-  <h1>DumprX</h1>
+  <h1>DumprX v2.0 🔥</h1>
 
-  <h4>Based Upon Phoenix Firmware Dumper from DroidDumps, with some Changes and Improvements</h4>
+  <h4>Advanced Firmware Extraction Toolkit - Completely Refactored & Enhanced</h4>
+  
+  [![GitHub Actions](https://github.com/Eduardob3677/DumprX/workflows/DumprX%20v2.0%20-%20Advanced%20Firmware%20Extraction/badge.svg)](https://github.com/Eduardob3677/DumprX/actions)
+  [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+  [![Version](https://img.shields.io/badge/Version-2.0-green.svg)](https://github.com/Eduardob3677/DumprX/releases)
 
 </div>
 
+## 🚀 What's New in v2.0
 
-## What this really is
+DumprX v2.0 is a **complete rewrite** of the original firmware extraction toolkit with modern architecture, enhanced functionality, and improved user experience.
 
-You might've used firmware extractor via dumpyara from https://github.com/AndroidDumps/. This toolkit is revamped edition of the tools with some improvements and feature additions.
+### 🏗️ Complete Architecture Overhaul
+- **✨ Modular Design**: Refactored from 1360-line monolithic script to clean modular architecture
+- **⚡ Enhanced Performance**: Optimized extraction with parallel processing and better resource management
+- **🛡️ Better Error Handling**: Comprehensive error detection, recovery mechanisms, and user feedback
+- **🧹 Cleaner Codebase**: Removed dead code, improved maintainability, and added extensive documentation
 
-## The improvements over dumpyara
+### 📱 Enhanced Manufacturer Support (12 Manufacturers)
+- **Samsung**: TAR.MD5, PIT files, Odin packages
+- **Xiaomi**: MIUI packages, Fastboot images, TGZ files
+- **OPPO/OnePlus**: OZIP, OFP, OPS decryption and extraction
+- **Huawei**: UPDATE.APP, HWOTA packages
+- **LG**: KDZ, DZ file extraction
+- **HTC**: RUU decryption and extraction
+- **Sony**: FTF, SIN file processing
+- **And 5 more manufacturers** with intelligent auto-detection
 
-- [x] dumpyara's and firmware_extractor's scripts are merged with handpicked shellcheck-ed and pylint-ed improvements
-- [x] The script can download and dump firmware from different filehosters such as Mega.NZ, Mediafire.com, AndroidFileHost.com and from Google Drive URLs
-- [x] File as-well-as Folder as an input is processed thoroughly to check all kinds of supported firmware types
-- [x] All the external tools are now inherited into one place and unnesessary files removed
-- [x] Binary tools are updated to latest available source
-- [x] LG KDZ utilities are updated to support latest firmwares
-- [x] Installation requirements are narrowed down to minimal for playing with this toolkit
-- [x] Recovery Dump is made too
+### 🔧 Advanced Boot Image Analysis
+- **Multi-Boot Support**: boot.img, vendor_boot.img, init_boot.img, recovery.img, vendor_kernel_boot.img
+- **Ramdisk Versions 2/3/4**: Automatic detection and analysis of Android ramdisk formats
+- **Compression Support**: gzip, LZ4, XZ, LZMA, Zstandard decompression
+- **DTB Extraction**: Device tree blob extraction and DTS conversion
+- **Kernel Analysis**: ELF generation, config extraction, version detection
 
-## Recommendations before Playing with Firmware Dumper
+### 🌐 Enhanced Download Services (8 Services)
+- **Direct Downloads**: HTTP/HTTPS with resume support
+- **Cloud Storage**: Mega.nz, Google Drive, OneDrive, Dropbox
+- **File Hosts**: MediaFire, AndroidFileHost
+- **Git Repositories**: GitHub/GitLab release downloads
+- **Smart Detection**: Automatic service detection and URL normalization
 
-This toolkit can run in any Debian/Ubuntu distribution, Ubuntu Bionic and Focal would be best, other versions are not tested.
+### 🤖 Advanced Telegram Bot Integration
+- **Interactive Commands**: Full bot with queue management and real-time updates
+- **Beautiful Notifications**: Enhanced formatted messages with device information
+- **Progress Tracking**: Real-time extraction progress with detailed status
+- **Queue Management**: Multiple extraction requests with intelligent queuing
+- **Error Notifications**: Comprehensive error reporting and debugging
 
-Support for Alpine Linux is added and tested. You can give it a try.
+### 💻 Enhanced User Interface
+- **Beautiful CLI**: Colorized output with emojis and progress indicators
+- **Minimalistic Design**: Clean, attractive user interface with better UX
+- **Smart Messaging**: Context-aware messages with helpful tips and guidance
+- **Progress Visualization**: Real-time progress bars and status updates
+
+## 🛠️ Quick Start
+
+### Prerequisites
+- Ubuntu/Debian Linux (18.04+ recommended)
+- 8GB+ free disk space
+- 4GB+ RAM for large firmware files
+- Python 3.8+
+- Git and basic build tools
+
+### Installation
+```bash
+# Clone the repository
+git clone https://github.com/Eduardob3677/DumprX.git
+cd DumprX
+
+# Run the enhanced setup script
+sudo chmod +x setup.sh
+./setup.sh
+
+# Make scripts executable
+chmod +x dumper_v2.sh telegram_bot.sh
+```
+
+### Basic Usage
+
+#### Extract firmware from file
+```bash
+./dumper_v2.sh firmware.zip
+```
+
+#### Extract firmware from URL
+```bash
+./dumper_v2.sh 'https://example.com/firmware.zip'
+```
+
+#### Use legacy dumper (for compatibility)
+```bash
+./dumper.sh firmware.zip
+```
+
+### Advanced Usage
+
+#### Start Telegram Bot
+```bash
+# Configure bot token
+echo "YOUR_BOT_TOKEN" > .tg_token
+
+# Start bot in polling mode
+./telegram_bot.sh polling
+
+# Start bot in webhook mode
+./telegram_bot.sh webhook https://your-domain.com/webhook
+```
+
+#### GitHub Actions Workflow
+1. Go to Actions tab in your repository
+2. Select "DumprX v2.0 - Advanced Firmware Extraction"
+3. Click "Run workflow"
+4. Enter firmware URL and configuration
+5. Choose between v2.0 or legacy dumper
+
+## 📦 Supported Formats
+
+### Archive Formats
+- **ZIP/RAR/7Z**: Standard compressed archives
+- **TAR/TGZ**: Unix archive formats
+- **TAR.MD5**: Samsung firmware packages
+
+### Manufacturer-Specific Formats
+- **OZIP**: OnePlus/OPPO encrypted firmware
+- **OFP**: OPPO firmware packages
+- **OPS**: OnePlus firmware packages
+- **KDZ/DZ**: LG firmware packages
+- **RUU**: HTC ROM update utilities
+- **UPDATE.APP**: Huawei firmware packages
+- **NB0**: Nokia firmware images
+- **PAC**: Spreadtrum firmware packages
+- **FTF/SIN**: Sony firmware packages
+
+### Image Formats
+- **Sparse Images**: Android sparse format
+- **Raw Images**: Standard partition images
+- **Boot Images**: Android boot/recovery images
+- **Super Images**: Dynamic partition images
+
+## 🌐 Supported Download Services
+
+- **Direct Downloads**: Any HTTP/HTTPS link
+- **Mega.nz**: File and folder links
+- **Google Drive**: Shared file links
+- **MediaFire**: Direct download links
+- **OneDrive**: Microsoft cloud storage
+- **AndroidFileHost**: AFH download links
+- **Dropbox**: Shared file links
+- **GitHub/GitLab**: Release asset downloads
+
+## 🚀 GitHub Actions Workflow Usage
+
+DumprX v2.0 includes an enhanced GitHub Actions workflow for automated firmware extraction in the cloud.
+
+### Workflow Features
+- **10-hour timeout**: For very large firmware files
+- **Enhanced logging**: Detailed progress and debug information
+- **Dual dumper support**: Choose between v2.0 or legacy dumper
+- **Debug mode**: Enable detailed logging for troubleshooting
+- **Resource monitoring**: CPU, memory, and disk usage tracking
+- **Artifact uploads**: Debug logs and extraction summaries
+
+### Configuration
+1. **Fork this repository** to your GitHub account
+2. **Configure secrets** (optional but recommended):
+   - `GITHUB_TOKEN`: For pushing to GitHub repositories
+   - `TELEGRAM_BOT_TOKEN`: For Telegram notifications
+3. **Run the workflow** from the Actions tab
+
+### Workflow Inputs
+- **firmware_url**: The firmware URL to extract (required)
+- **git_provider**: Choose GitHub or GitLab for uploads
+- **use_legacy_dumper**: Use original dumper.sh for compatibility
+- **enable_debug**: Enable detailed debug logging
+- **Telegram settings**: Bot token and chat ID for notifications
+
+## 🤖 Telegram Bot Commands
+
+The integrated Telegram bot provides a complete interface for firmware extraction:
+
+### Bot Commands
+- `/start` - Welcome message and bot introduction
+- `/help` - Complete command reference
+- `/extract <url>` - Extract firmware from URL
+- `/status` - Check bot status and system resources
+- `/queue` - View extraction queue and progress
+- `/cancel` - Cancel current extraction
+- `/supported` - List supported formats and services
+- `/examples` - Usage examples and tips
+
+### Bot Features
+- **Queue Management**: Handle multiple extraction requests
+- **Progress Updates**: Real-time extraction progress
+- **Error Handling**: Comprehensive error reporting
+- **Beautiful Messages**: Formatted output with emojis
+- **Smart Detection**: Automatic URL and format detection
+
+## 📁 Project Structure
+
+```
+DumprX/
+├── lib/                          # Modular library components
+│   ├── core/                    # Core functionality
+│   │   └── config.sh           # Configuration management
+│   ├── messaging/              # User interface and notifications
+│   │   ├── ui.sh              # Enhanced CLI interface
+│   │   └── telegram.sh        # Telegram bot integration
+│   ├── downloaders/           # Download service handlers
+│   │   └── services.sh        # Multi-service download support
+│   ├── manufacturers/         # Manufacturer-specific handlers
+│   │   └── detection.sh       # Auto-detection and extraction
+│   ├── extractors/           # Extraction modules
+│   │   ├── partitions.sh     # Partition detection and handling
+│   │   └── bootimg.sh        # Boot image analysis
+│   └── utils/               # Common utilities
+│       └── common.sh        # Shared utility functions
+├── dumper_v2.sh            # Enhanced main extraction script
+├── telegram_bot.sh         # Standalone Telegram bot
+├── dumper.sh              # Legacy dumper (compatibility)
+├── setup.sh               # Enhanced installation script
+├── utils/                 # External tools and utilities
+└── .github/workflows/     # Enhanced GitHub Actions
+```
 
 For any other UNIX Distributions, please refer to internal [Setup File](setup.sh) and install the required programs via their own package manager.
 

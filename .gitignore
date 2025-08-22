@@ -1,3 +1,6 @@
+# DumprX v2.0 - Enhanced .gitignore
+
+# Sensitive configuration files
 .github_token
 .github_orgname
 .gitlab_token
@@ -5,11 +8,70 @@
 .gitlab_instance
 .tg_token
 .tg_chat
-.venv/
+
+# Working directories
 input/
-tmp/
 out/
+tmp/
+.venv/
+
+# Python cache and virtual environments
 *.pyc
-__pycache__
+__pycache__/
+*.pyo
+*.egg-info/
+venv/
+env/
+
+# External tool directories (cloned at runtime)
 utils/oppo_*
 utils/vmlinux*
+utils/android_tools/
+utils/pacextractor/
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+*~
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.o
+*.so
+*.dll
+
+# Archive files (large firmware files)
+*.zip
+*.rar
+*.7z
+*.tar
+*.tar.gz
+*.tgz
+
+# Firmware files (should not be committed)
+*.img
+*.bin
+*.ozip
+*.kdz
+*.ofp
+*.ops
+*.nb0
+*.pac
+*.sin
+*.ftf
+
+# Editor and IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test and debug directories
+test_*/
+tests/*/
+debug/
+.pytest_cache/

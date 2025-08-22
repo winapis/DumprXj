@@ -1,10 +1,10 @@
-name: Firmware Dump Workflow
+name: DumprX v2.0 - Advanced Firmware Extraction
 
 on:
   workflow_dispatch:
     inputs:
       firmware_url:
-        description: 'Firmware URL to dump'
+        description: 'Firmware URL to dump (supports 15+ formats and 8 download services)'
         required: true
         type: string
       git_provider:
@@ -37,21 +37,32 @@ on:
         type: string
         default: 'gitlab.com'
       telegram_token:
-        description: 'Telegram Bot Token (optional, for notifications)'
+        description: 'Telegram Bot Token (optional, for enhanced notifications)'
         required: false
         type: string
       telegram_chat_id:
         description: 'Telegram Chat/Channel ID (optional, for notifications)'
         required: false
         type: string
+      use_legacy_dumper:
+        description: 'Use legacy dumper.sh instead of new v2.0 (for compatibility)'
+        required: false
+        type: boolean
+        default: false
+      enable_debug:
+        description: 'Enable debug mode for detailed logging'
+        required: false
+        type: boolean
+        default: false
 
 env:
   PUSH_TO_GITLAB: ${{ inputs.git_provider == 'gitlab' }}
+  DEBUG: ${{ inputs.enable_debug && '1' || '0' }}
 
 jobs:
   dump-firmware:
     runs-on: ubuntu-latest
-    timeout-minutes: 480  # 8 hours timeout for large firmware files
+    timeout-minutes: 600  # 10 hours timeout for very large firmware files
     
     steps:
     - name: Checkout repository
@@ -59,50 +70,85 @@ jobs:
       
     - name: Free up disk space
       run: |
+        echo "🧹 Freeing up disk space..."
         sudo rm -rf /usr/share/dotnet
         sudo rm -rf /opt/ghc
         sudo rm -rf "/usr/local/share/boost"
         sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-        sudo apt-get remove -y '^aspnetcore-.*'
-        sudo apt-get remove -y '^dotnet-.*'
-        sudo apt-get remove -y '^llvm-.*'
-        sudo apt-get remove -y 'php.*'
+        sudo apt-get remove -y '^aspnetcore-.*' '^dotnet-.*' '^llvm-.*' 'php.*'
         sudo apt-get autoremove -y
         sudo apt-get clean
+        echo "💾 Available disk space:"
         df -h
         
     - name: Set up Git LFS
       run: |
+        echo "📦 Setting up Git LFS..."
         git lfs install --global
+        git config --global filter.lfs.clean 'git-lfs clean -- %f'
+        git config --global filter.lfs.smudge 'git-lfs smudge -- %f'
+        git config --global filter.lfs.process 'git-lfs filter-process'
+        git config --global filter.lfs.required true
         
-    - name: Install dependencies
+    - name: Install dependencies with enhanced setup
       run: |
-        sudo apt-get update
+        echo "🔧 Installing enhanced dependencies..."
         sudo chmod +x setup.sh
         ./setup.sh
         
-    - name: Configure Git
-      run: |
-        git config --global user.email "action@github.com"
-        git config --global user.name "GitHub Action"
-        git config --global http.postBuffer 524288000
+        # Install additional tools for v2.0
+        echo "📦 Installing additional tools..."
+        pip install --break-system-packages uvx
         
-    - name: Validate inputs
+        echo "✅ Dependencies installed successfully"
+        
+    - name: Configure Git with enhanced settings
       run: |
+        echo "⚙️ Configuring Git..."
+        git config --global user.email "dumprx-action@github.com"
+        git config --global user.name "DumprX v2.0 Action"
+        git config --global http.postBuffer 2048576000  # 2GB buffer
+        git config --global core.compression 0
+        git config --global core.preloadindex true
+        git config --global core.fscache true
+        git config --global gc.auto 0
+        
+    - name: Validate inputs and environment
+      run: |
+        echo "🔍 Validating inputs..."
+        
+        # Validate git provider configuration
         if [[ "${{ inputs.git_provider }}" == "github" ]]; then
           if [[ -z "${{ inputs.github_token }}" ]]; then
-            echo "Error: GitHub token is required when using GitHub provider"
+            echo "❌ Error: GitHub token is required when using GitHub provider"
             exit 1
           fi
+          echo "✅ GitHub provider configuration valid"
         elif [[ "${{ inputs.git_provider }}" == "gitlab" ]]; then
           if [[ -z "${{ inputs.gitlab_token }}" ]]; then
-            echo "Error: GitLab token is required when using GitLab provider"
+            echo "❌ Error: GitLab token is required when using GitLab provider"
             exit 1
           fi
+          echo "✅ GitLab provider configuration valid"
         fi
+        
+        # Validate firmware URL
+        if [[ ! "${{ inputs.firmware_url }}" =~ ^https?:// ]]; then
+          echo "❌ Error: Invalid firmware URL format"
+          exit 1
+        fi
+        echo "✅ Firmware URL format valid"
+        
+        # Check available resources
+        echo "📊 System resources:"
+        echo "CPU cores: $(nproc)"
+        echo "Memory: $(free -h | grep Mem | awk '{print $2}')"
+        echo "Disk space: $(df -h . | tail -1 | awk '{print $4}')"
         
     - name: Setup authentication tokens
       run: |
+        echo "🔐 Setting up authentication tokens..."
+        
         # Create token files based on provider selection
         if [[ "${{ inputs.git_provider }}" == "github" ]]; then
           echo "${{ inputs.github_token }}" > .github_token
@@ -110,7 +156,8 @@ jobs:
             echo "${{ inputs.github_orgname }}" > .github_orgname
           fi
           # Remove GitLab token file if it exists
-          rm -f .gitlab_token
+          rm -f .gitlab_token .gitlab_group .gitlab_instance
+          echo "✅ GitHub authentication configured"
         elif [[ "${{ inputs.git_provider }}" == "gitlab" ]]; then
           echo "${{ inputs.gitlab_token }}" > .gitlab_token
           if [[ -n "${{ inputs.gitlab_group }}" ]]; then
@@ -120,41 +167,149 @@ jobs:
             echo "${{ inputs.gitlab_instance }}" > .gitlab_instance
           fi
           # Remove GitHub token file if it exists
-          rm -f .github_token
+          rm -f .github_token .github_orgname
+          echo "✅ GitLab authentication configured"
         fi
         
         # Setup Telegram tokens if provided
         if [[ -n "${{ inputs.telegram_token }}" ]]; then
           echo "${{ inputs.telegram_token }}" > .tg_token
+          echo "✅ Telegram bot token configured"
         fi
         if [[ -n "${{ inputs.telegram_chat_id }}" ]]; then
           echo "${{ inputs.telegram_chat_id }}" > .tg_chat
+          echo "✅ Telegram chat ID configured"
         fi
         
-    - name: Set PUSH_TO_GITLAB environment variable
+    - name: Set environment variables
       run: |
+        echo "🌍 Setting environment variables..."
+        
         if [[ "${{ inputs.git_provider }}" == "gitlab" ]]; then
           echo "PUSH_TO_GITLAB=true" >> $GITHUB_ENV
         else
           echo "PUSH_TO_GITLAB=false" >> $GITHUB_ENV
         fi
         
-    - name: Run firmware dumper
+        if [[ "${{ inputs.enable_debug }}" == "true" ]]; then
+          echo "DEBUG=1" >> $GITHUB_ENV
+          echo "🐛 Debug mode enabled"
+        else
+          echo "DEBUG=0" >> $GITHUB_ENV
+        fi
+        
+    - name: Pre-extraction validation
       run: |
-        chmod +x dumper.sh
-        ./dumper.sh '${{ inputs.firmware_url }}'
+        echo "🔍 Running pre-extraction validation..."
+        
+        # Test network connectivity
+        if ! curl -s --max-time 10 --head "https://www.google.com" >/dev/null; then
+          echo "⚠️ Warning: Network connectivity issues detected"
+        else
+          echo "✅ Network connectivity confirmed"
+        fi
+        
+        # Validate firmware URL accessibility
+        echo "📡 Testing firmware URL accessibility..."
+        if curl -s --max-time 30 --head "${{ inputs.firmware_url }}" >/dev/null; then
+          echo "✅ Firmware URL is accessible"
+        else
+          echo "⚠️ Warning: Firmware URL may not be accessible or may require authentication"
+        fi
+        
+    - name: Run DumprX v2.0 firmware extractor
+      run: |
+        echo "🚀 Starting DumprX v2.0 extraction process..."
+        
+        # Choose dumper version
+        if [[ "${{ inputs.use_legacy_dumper }}" == "true" ]]; then
+          echo "🔄 Using legacy dumper.sh"
+          chmod +x dumper.sh
+          ./dumper.sh '${{ inputs.firmware_url }}'
+        else
+          echo "⚡ Using enhanced dumper_v2.sh"
+          chmod +x dumper_v2.sh
+          ./dumper_v2.sh '${{ inputs.firmware_url }}'
+        fi
+        
+    - name: Post-extraction analysis
+      if: always()
+      run: |
+        echo "📊 Post-extraction analysis..."
+        
+        # Check extraction results
+        if [[ -d "out" ]]; then
+          echo "📂 Extraction output found:"
+          find out -type f -name "*.img" | head -20
+          
+          echo ""
+          echo "📈 Extraction statistics:"
+          echo "Total files: $(find out -type f | wc -l)"
+          echo "Total size: $(du -sh out | cut -f1)"
+          echo "Partition images: $(find out -name "*.img" | wc -l)"
+          echo "Boot images: $(find out -name "*boot*" -type d | wc -l)"
+        else
+          echo "❌ No extraction output found"
+        fi
+        
+        # Check for error logs
+        if find . -name "*.log" -size +0c | grep -q .; then
+          echo "⚠️ Log files found:"
+          find . -name "*.log" -exec basename {} \;
+        fi
         
     - name: Cleanup sensitive files
       if: always()
       run: |
+        echo "🧹 Cleaning up sensitive files..."
         rm -f .github_token .gitlab_token .tg_token .tg_chat .github_orgname .gitlab_group .gitlab_instance
+        echo "✅ Sensitive files cleaned"
         
-    - name: Upload artifacts on failure
+    - name: Upload extraction artifacts
       if: failure()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: debug-logs
+        name: dumprx-debug-logs-${{ github.run_id }}
         path: |
           out/tmp/
           *.log
+          out/extraction_log.txt
+          out/device_info.txt
         retention-days: 7
+        
+    - name: Upload successful extraction summary
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: dumprx-extraction-summary-${{ github.run_id }}
+        path: |
+          out/device_info.txt
+          out/extraction_log.txt
+          out/*.txt
+        retention-days: 3
+        
+    - name: Workflow summary
+      if: always()
+      run: |
+        echo "📋 ## DumprX v2.0 Extraction Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**🔧 Configuration:**" >> $GITHUB_STEP_SUMMARY
+        echo "- Firmware URL: \`${{ inputs.firmware_url }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- Git Provider: \`${{ inputs.git_provider }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- Dumper Version: \`${{ inputs.use_legacy_dumper && 'Legacy (dumper.sh)' || 'Enhanced (dumper_v2.sh)' }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- Debug Mode: \`${{ inputs.enable_debug && 'Enabled' || 'Disabled' }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [[ -f "out/device_info.txt" ]]; then
+          echo "**📱 Device Information:**" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          cat out/device_info.txt >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [[ -d "out" ]]; then
+          echo "**📊 Extraction Results:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Total files extracted: \`$(find out -type f | wc -l)\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Partition images: \`$(find out -name "*.img" | wc -l)\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Total size: \`$(du -sh out | cut -f1)\`" >> $GITHUB_STEP_SUMMARY
+        fi
