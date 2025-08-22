@@ -204,7 +204,7 @@ class Config:
         utils = self.utils_dir
         
         self.tools = {
-            # Python scripts
+            # Python scripts  
             "sdat2img": utils / "sdat2img.py",
             "ozipdecrypt": utils / "oppo_ozip_decrypt" / "ozipdecrypt.py",
             "ofp_qc_decrypt": utils / "oppo_decrypt" / "ofp_qc_decrypt.py", 
@@ -234,9 +234,9 @@ class Config:
             "transfer": utils / "bin" / "transfer",
             "fsck_erofs": utils / "bin" / "fsck.erofs",
             
-            # Shell scripts (will be converted to Python)
-            "unpackboot": utils / "unpackboot.sh",
-            "megamediadrive_dl": utils / "downloaders" / "mega-media-drive_dl.sh",
+            # Python modules (replaced shell scripts)
+            "unpackboot": "dumprx.utils.boot_unpacker",  # Python module instead of shell script
+            "advanced_downloader": "dumprx.utils.advanced_downloader",  # Python module
             "afh_dl": utils / "downloaders" / "afh_dl.py",
         }
     

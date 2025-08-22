@@ -15,14 +15,14 @@ from dumprx import DumprX, logger, config
 
 
 @click.command()
-@click.argument('input_path', type=click.Path(exists=True))
+@click.argument('input_path')
 @click.option('--output', '-o', type=click.Path(), help='Output directory')
 @click.option('--verbose', '-v', is_flag=True, help='Enable verbose logging')
 @click.option('--debug', is_flag=True, help='Enable debug logging')
 @click.version_option(version='2.0.0')
 def main(input_path: str, output: str, verbose: bool, debug: bool):
     """
-    DumprX v2.0 - Advanced Firmware Extraction Toolkit
+    DumprX - Advanced Firmware Extraction Toolkit
     
     Extract firmware from various manufacturers with intelligent auto-detection.
     
