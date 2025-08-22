@@ -1,0 +1,6 @@
+# Requirements for DumprX Python version
+click>=8.0.0
+requests>=2.25.0
+pyyaml>=6.0
+pathlib2>=2.3.0
+colorama>=0.4.0

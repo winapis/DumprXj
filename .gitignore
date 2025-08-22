@@ -1,3 +1,4 @@
+# Authentication tokens
 .github_token
 .github_orgname
 .gitlab_token
@@ -5,11 +6,50 @@
 .gitlab_instance
 .tg_token
 .tg_chat
+
+# Python
 .venv/
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# DumprX directories
 input/
 tmp/
 out/
-*.pyc
-__pycache__
+
+# Configuration
+dumprx_config.json
+
+# External tools (cloned at runtime)
 utils/oppo_*
 utils/vmlinux*
+utils/android_tools/
+utils/pacextractor/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
