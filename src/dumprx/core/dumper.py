@@ -5,6 +5,7 @@ Main DumprX class - Core firmware extraction functionality.
 import os
 import shutil
 import tempfile
+from datetime import datetime
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 import asyncio
@@ -120,6 +121,7 @@ class DumprX:
                 'vendor_info': vendor_info,
                 'organized_files': organized_files,
                 'output_dir': str(self.config.output_dir),
+                'extraction_date': datetime.now().isoformat(),
                 'success': True
             }
             

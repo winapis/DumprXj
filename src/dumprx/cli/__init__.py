@@ -252,6 +252,100 @@ def config_info():
 
 
 @cli.command()
+@click.argument('file_path', type=click.Path(exists=True))
+@click.option('--output', '-o', type=click.Path(), help='Output directory for test extraction')
+@click.option('--dry-run', is_flag=True, help='Only analyze without extracting')
+@click.pass_context
+def test(ctx, file_path, output, dry_run):
+    """
+    Test extraction of a firmware file without full processing.
+    
+    This command allows you to test if a firmware file can be processed
+    by DumprX without doing a full extraction with Git upload and notifications.
+    
+    Examples:
+    
+        dumprx test firmware.zip
+        
+        dumprx test firmware.ozip --dry-run
+        
+        dumprx test /path/to/firmware.kdz --output /tmp/test
+    """
+    logger = get_logger()
+    
+    try:
+        # Initialize configuration
+        config = Config()
+        
+        # Set custom output if provided
+        if output:
+            config.output_dir = Path(output)
+            config.temp_dir = config.output_dir / "tmp"
+        else:
+            # Use a test directory
+            config.output_dir = config.project_dir / "test_output"
+            config.temp_dir = config.output_dir / "tmp"
+        
+        config.ensure_directories()
+        
+        # Set up file logging
+        log_file = config.output_dir / "test.log"
+        setup_file_logging(log_file)
+        
+        # Initialize DumprX
+        dumper = DumprX(config)
+        
+        if dry_run:
+            # Only analyze the file
+            logger.info(f"🔍 Analyzing file: {file_path}")
+            info_data = dumper.get_extraction_info(file_path)
+            
+            logger.info("📄 Analysis results:")
+            click.echo(f"  Type: {info_data.get('type', 'Unknown')}")
+            click.echo(f"  Format: {info_data.get('format', 'Unknown')}")
+            click.echo(f"  Size: {info_data.get('size', 'Unknown')} bytes")
+            
+            if 'vendor' in info_data:
+                click.echo(f"  Vendor: {info_data['vendor']}")
+            
+            if 'encrypted' in info_data:
+                click.echo(f"  Encrypted: {'Yes' if info_data['encrypted'] else 'No'}")
+            
+            supported = dumper.detector.is_supported_format(info_data)
+            click.echo(f"  Supported: {'✅ Yes' if supported else '❌ No'}")
+            
+        else:
+            # Test extraction
+            logger.info(f"🧪 Test extracting: {file_path}")
+            
+            result = dumper.extract_firmware(
+                input_path=str(file_path),
+                upload_to_git=False,
+                send_telegram=False
+            )
+            
+            # Display test results
+            logger.success("🎉 Test extraction completed!")
+            click.echo(f"\nTest Results:")
+            click.echo(f"  Input: {result['input_info'].get('format', 'Unknown')} file")
+            click.echo(f"  Partitions found: {len(result.get('partition_info', {}).get('partitions_found', []))}")
+            click.echo(f"  Boot images: {len(result.get('partition_info', {}).get('boot_images', []))}")
+            click.echo(f"  Output directory: {result['output_dir']}")
+            
+            system_info = result.get('partition_info', {}).get('system_info', {})
+            if system_info.get('brand') != 'Unknown':
+                click.echo(f"  Device: {system_info.get('brand', '')} {system_info.get('model', '')}")
+                click.echo(f"  Android: {system_info.get('android_version', 'Unknown')}")
+        
+    except Exception as e:
+        logger.error(f"Test failed: {str(e)}")
+        if ctx.obj.get('debug'):
+            import traceback
+            traceback.print_exc()
+        sys.exit(1)
+
+
+@cli.command()
 def help_command():
     """Show help and usage examples."""
     print_banner()
@@ -270,6 +364,7 @@ def help_command():
     
     click.echo("📚 Available Commands:")
     click.echo("  extract     - Extract firmware files")
+    click.echo("  test        - Test extraction without full processing")
     click.echo("  formats     - List supported formats")
     click.echo("  vendors     - List supported vendors")
     click.echo("  info        - Get file information")
