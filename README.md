@@ -1,48 +1,187 @@
 <div align="center">
 
-  <h1>DumprX</h1>
+  <h1>DumprX v2.0</h1>
 
-  <h4>Based Upon Phoenix Firmware Dumper from DroidDumps, with some Changes and Improvements</h4>
+  <h4>Advanced Firmware Extraction Toolkit with Python Architecture</h4>
+  
+  [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://python.org)
+  [![License](https://img.shields.io/badge/License-GPL%20v3-green.svg)](LICENSE)
+  [![Manufacturers](https://img.shields.io/badge/Manufacturers-12+-orange.svg)](#supported-manufacturers)
 
 </div>
 
+## 🚀 What's New in v2.0
 
-## What this really is
+DumprX v2.0 is a complete rewrite in Python with enhanced features, better architecture, and improved user experience while maintaining full backward compatibility.
 
-You might've used firmware extractor via dumpyara from https://github.com/AndroidDumps/. This toolkit is revamped edition of the tools with some improvements and feature additions.
+### ✨ Key Features
 
-## The improvements over dumpyara
+- **🏭 12+ Manufacturer Support** with intelligent auto-detection
+- **🥾 Enhanced Boot Image Analysis** with multi-boot support  
+- **🌐 Advanced Download Services** with resume capability
+- **🤖 Telegram Bot Integration** with queue management
+- **💻 Beautiful CLI Interface** with progress tracking
+- **🔄 Dual Dumper Support** - Choose between v2.0 (Python) or legacy (Shell)
+- **⚡ 10-hour GitHub Actions** workflow timeout for large files
 
-- [x] dumpyara's and firmware_extractor's scripts are merged with handpicked shellcheck-ed and pylint-ed improvements
-- [x] The script can download and dump firmware from different filehosters such as Mega.NZ, Mediafire.com, AndroidFileHost.com and from Google Drive URLs
-- [x] File as-well-as Folder as an input is processed thoroughly to check all kinds of supported firmware types
-- [x] All the external tools are now inherited into one place and unnesessary files removed
-- [x] Binary tools are updated to latest available source
-- [x] LG KDZ utilities are updated to support latest firmwares
-- [x] Installation requirements are narrowed down to minimal for playing with this toolkit
-- [x] Recovery Dump is made too
+### 🏭 Supported Manufacturers
 
-## Recommendations before Playing with Firmware Dumper
+| Manufacturer | Formats | Features |
+|-------------|---------|----------|
+| **Samsung** | TAR.MD5, PIT files | MD5 verification, PIT parsing |
+| **Xiaomi** | MIUI packages, Fastboot images | Payload extraction, sparse conversion |
+| **OPPO/OnePlus** | OZIP, OFP, OPS decryption | Encryption handling, type detection |
+| **Huawei** | UPDATE.APP packages | Complete package extraction |
+| **LG** | KDZ/DZ extraction | Modern firmware support |
+| **HTC** | RUU decryption | System/firmware partitions |
+| **Sony** | FTF/SIN processing | SIN file extraction |
+| **Generic** | All standard formats | Fallback extraction |
 
-This toolkit can run in any Debian/Ubuntu distribution, Ubuntu Bionic and Focal would be best, other versions are not tested.
+### 🥾 Enhanced Boot Image Analysis
 
-Support for Alpine Linux is added and tested. You can give it a try.
+- **Multi-boot support**: `boot.img`, `vendor_boot.img`, `init_boot.img`, `recovery.img`, `vendor_kernel_boot.img`
+- **Ramdisk detection**: Automatic detection of Android ramdisk formats v2, v3, and v4
+- **Compression support**: gzip, LZ4, XZ, LZMA, Zstandard decompression
+- **DTB extraction**: Device tree blob extraction and DTS conversion
+- **Kernel analysis**: ELF generation, config extraction, version detection
 
-For any other UNIX Distributions, please refer to internal [Setup File](setup.sh) and install the required programs via their own package manager.
+### 🌐 Download Services
 
-## Prepare toolkit dependencies / requirements
+Enhanced download support for 8+ services with intelligent URL detection:
 
-To prepare for this toolkit, run [Setup File](setup.sh) at first, which is needed only one time. After that, run [Main Script](dumper.sh) with proper argument.
+- **Direct HTTP/HTTPS** downloads with resume support
+- **Cloud storage**: Mega.nz, Google Drive, OneDrive, Dropbox  
+- **File hosts**: MediaFire, AndroidFileHost
+- **Git repositories**: GitHub/GitLab release downloads
 
-## Usage
+## 🛠️ Installation & Setup
 
-Run this toolkit with proper firmware file/folder path or URL
+### Quick Start (Recommended)
 
 ```bash
-./dumper.sh 'Firmware File/Extracted Folder -OR- Supported Website Link'
+# Clone the repository
+git clone https://github.com/winapis/DumprXj.git
+cd DumprXj
+
+# Setup Python environment (v2.0)
+./setup_v2.py
+
+# Or setup legacy environment
+./setup.sh
 ```
 
-Help Context:
+### Manual Installation
+
+```bash
+# Install system dependencies
+sudo apt update
+sudo apt install -y python3-pip unrar p7zip-full brotli git-lfs
+
+# Install Python dependencies
+pip3 install -r requirements.txt
+
+# Make executable
+chmod +x dumper_v2.py
+```
+
+## 📖 Usage
+
+### DumprX v2.0 (Python) - Recommended
+
+```bash
+# Extract firmware file
+./dumper_v2.py firmware.zip
+
+# Extract from URL
+./dumper_v2.py 'https://example.com/firmware.zip'
+
+# Specify output directory
+./dumper_v2.py -o /path/to/output firmware.zip
+
+# Enable verbose logging
+./dumper_v2.py -v firmware.zip
+
+# Enable debug mode
+./dumper_v2.py --debug firmware.zip
+
+# Show help
+./dumper_v2.py --help
+```
+
+### Legacy Dumper (Shell) - Backward Compatibility
+
+```bash
+# Use legacy dumper
+./dumper.sh firmware.zip
+```
+
+### 🎯 Supported Input Types
+
+**Firmware Files:**
+- Archives: `.zip`, `.rar`, `.7z`, `.tar`, `.tar.gz`, `.tar.md5`
+- Manufacturer-specific: `.ozip`, `.ofp`, `.ops`, `.kdz`, `.dz`
+- System images: `system.img`, `boot.img`, `recovery.img`, `super.img`
+- Special formats: `UPDATE.APP`, `payload.bin`, `*.pac`, `*.sin`, `*.ftf`
+- RUU files: `ruu_*.exe`
+
+**Download URLs:**
+- Direct links: Any HTTP/HTTPS URL
+- Mega.nz: `https://mega.nz/file/...`
+- Google Drive: `https://drive.google.com/file/d/...`
+- MediaFire: `https://www.mediafire.com/file/...`
+- AndroidFileHost: `https://androidfilehost.com/?fid=...`
+
+## 🤖 GitHub Actions Workflow
+
+Enhanced workflow with dual dumper support:
+
+1. Go to **Actions** tab in your fork
+2. Select **Firmware Dump Workflow**
+3. Click **Run workflow**
+4. Fill in the parameters:
+   - **Firmware URL**: Direct link or supported service URL
+   - **Dumper Version**: Choose v2.0 (Python) or legacy (Shell)
+   - **Git Provider**: GitHub or GitLab
+   - **Debug Mode**: Enable for troubleshooting
+5. Click **Run workflow** to start
+
+### 🔧 Workflow Features
+
+- **10-hour timeout** for very large firmware files
+- **Dual dumper support** with version selection
+- **Debug mode** for detailed logging
+- **Enhanced error handling** and artifact upload
+- **Automatic cleanup** of sensitive files
+
+## 🏗️ Architecture
+
+### Python Package Structure
+
+```
+src/dumprx/
+├── core/
+│   ├── dumper.py      # Main extraction engine
+│   ├── config.py      # Configuration management
+│   └── logger.py      # Enhanced logging
+├── manufacturers/
+│   ├── samsung.py     # Samsung extractor
+│   ├── xiaomi.py      # Xiaomi extractor
+│   ├── oppo.py        # OPPO/OnePlus extractor
+│   └── ...           # Other manufacturer extractors
+├── downloaders/       # Download service modules
+├── boot/             # Boot image analysis
+├── utils/            # Utility modules
+└── telegram/         # Bot integration (future)
+```
+
+### 🔄 Backward Compatibility
+
+This refactoring maintains **full backward compatibility**:
+
+- All existing workflows continue to work
+- Legacy mode available in GitHub Actions workflow
+- Original `dumper.sh` remains functional
+- Existing tool dependencies preserved
 
 ```text
   >> Supported Websites:

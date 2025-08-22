@@ -7,6 +7,14 @@ on:
         description: 'Firmware URL to dump'
         required: true
         type: string
+      dumper_version:
+        description: 'Dumper version to use'
+        required: true
+        type: choice
+        options:
+          - v2.0 (Python)
+          - legacy (Shell)
+        default: v2.0 (Python)
       git_provider:
         description: 'Git provider to upload the dump'
         required: true
@@ -15,6 +23,11 @@ on:
           - github
           - gitlab
         default: github
+      debug_mode:
+        description: 'Enable debug mode for troubleshooting'
+        required: false
+        type: boolean
+        default: false
       github_token:
         description: 'GitHub Token (required if using GitHub provider)'
         required: false
@@ -51,7 +64,7 @@ env:
 jobs:
   dump-firmware:
     runs-on: ubuntu-latest
-    timeout-minutes: 480  # 8 hours timeout for large firmware files
+    timeout-minutes: 600  # 10 hours timeout for very large firmware files
     
     steps:
     - name: Checkout repository
@@ -78,8 +91,16 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo chmod +x setup.sh
-        ./setup.sh
+        # Install dependencies based on dumper version
+        if [[ "${{ inputs.dumper_version }}" == "v2.0 (Python)" ]]; then
+          echo "🐍 Setting up Python environment..."
+          sudo chmod +x setup_v2.py
+          ./setup_v2.py
+        else
+          echo "🐚 Setting up legacy environment..."
+          sudo chmod +x setup.sh
+          ./setup.sh
+        fi
         
     - name: Configure Git
       run: |
@@ -141,8 +162,24 @@ jobs:
         
     - name: Run firmware dumper
       run: |
-        chmod +x dumper.sh
-        ./dumper.sh '${{ inputs.firmware_url }}'
+        # Choose dumper based on input
+        if [[ "${{ inputs.dumper_version }}" == "v2.0 (Python)" ]]; then
+          echo "🚀 Using DumprX v2.0 (Python)"
+          chmod +x dumper_v2.py
+          if [[ "${{ inputs.debug_mode }}" == "true" ]]; then
+            ./dumper_v2.py --debug '${{ inputs.firmware_url }}'
+          else
+            ./dumper_v2.py '${{ inputs.firmware_url }}'
+          fi
+        else
+          echo "🐚 Using legacy dumper (Shell)"
+          chmod +x dumper.sh
+          if [[ "${{ inputs.debug_mode }}" == "true" ]]; then
+            DEBUG=1 ./dumper.sh '${{ inputs.firmware_url }}'
+          else
+            ./dumper.sh '${{ inputs.firmware_url }}'
+          fi
+        fi
         
     - name: Cleanup sensitive files
       if: always()
