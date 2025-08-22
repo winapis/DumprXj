@@ -1,14 +1,27 @@
-name: Firmware Dump Workflow
+name: 🚀 DumprX v2.0 - Enhanced Firmware Dump Workflow
 
 on:
   workflow_dispatch:
     inputs:
       firmware_url:
-        description: 'Firmware URL to dump'
+        description: '📦 Firmware URL to dump'
         required: true
         type: string
+      dumper_version:
+        description: '🔧 Choose dumper version'
+        required: true
+        type: choice
+        options:
+          - v2
+          - legacy
+        default: v2
+      debug_mode:
+        description: '🐛 Enable debug mode with detailed logging'
+        required: false
+        type: boolean
+        default: false
       git_provider:
-        description: 'Git provider to upload the dump'
+        description: '🐙 Git provider to upload the dump'
         required: true
         type: choice
         options:
@@ -16,99 +29,198 @@ on:
           - gitlab
         default: github
       github_token:
-        description: 'GitHub Token (required if using GitHub provider)'
+        description: '🔑 GitHub Token (required if using GitHub provider)'
         required: false
         type: string
       github_orgname:
-        description: 'GitHub Organization Name (optional, uses username if not provided)'
+        description: '🏢 GitHub Organization Name (optional, uses username if not provided)'
         required: false
         type: string
       gitlab_token:
-        description: 'GitLab Token (required if using GitLab provider)'
+        description: '🔑 GitLab Token (required if using GitLab provider)'
         required: false
         type: string
       gitlab_group:
-        description: 'GitLab Group Name (optional, uses username if not provided)'
+        description: '🏢 GitLab Group Name (optional, uses username if not provided)'
         required: false
         type: string
       gitlab_instance:
-        description: 'GitLab Instance URL (default: gitlab.com)'
+        description: '🌐 GitLab Instance URL (default: gitlab.com)'
         required: false
         type: string
         default: 'gitlab.com'
       telegram_token:
-        description: 'Telegram Bot Token (optional, for notifications)'
+        description: '🤖 Telegram Bot Token (optional, for notifications)'
         required: false
         type: string
       telegram_chat_id:
-        description: 'Telegram Chat/Channel ID (optional, for notifications)'
+        description: '💬 Telegram Chat/Channel ID (optional, for notifications)'
         required: false
         type: string
+      enable_boot_analysis:
+        description: '🥾 Enable enhanced boot image analysis'
+        required: false
+        type: boolean
+        default: true
+      enable_manufacturer_detection:
+        description: '🏭 Enable intelligent manufacturer detection'
+        required: false
+        type: boolean
+        default: true
 
 env:
   PUSH_TO_GITLAB: ${{ inputs.git_provider == 'gitlab' }}
+  DUMPRX_VERSION: ${{ inputs.dumper_version }}
+  DEBUG_MODE: ${{ inputs.debug_mode }}
 
 jobs:
   dump-firmware:
     runs-on: ubuntu-latest
-    timeout-minutes: 480  # 8 hours timeout for large firmware files
+    timeout-minutes: 600  # 10 hours timeout for very large firmware files
     
     steps:
-    - name: Checkout repository
+    - name: 📥 Checkout repository
       uses: actions/checkout@v4
       
-    - name: Free up disk space
+    - name: 🧹 Free up disk space and optimize runner
       run: |
+        echo "🗑️ Cleaning up disk space..."
         sudo rm -rf /usr/share/dotnet
         sudo rm -rf /opt/ghc
         sudo rm -rf "/usr/local/share/boost"
         sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-        sudo apt-get remove -y '^aspnetcore-.*'
-        sudo apt-get remove -y '^dotnet-.*'
-        sudo apt-get remove -y '^llvm-.*'
-        sudo apt-get remove -y 'php.*'
+        sudo rm -rf /opt/pipx
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /usr/local/lib/node_modules
+        
+        # Remove packages
+        sudo apt-get remove -y '^aspnetcore-.*' '^dotnet-.*' '^llvm-.*' 'php.*'
         sudo apt-get autoremove -y
         sudo apt-get clean
+        
+        # Show disk usage
+        echo "💽 Disk space after cleanup:"
         df -h
         
-    - name: Set up Git LFS
+    - name: 📊 System Information
       run: |
+        echo "🖥️ System Information:"
+        echo "CPU cores: $(nproc)"
+        echo "Memory: $(free -h)"
+        echo "Storage: $(df -h /)"
+        echo "Ubuntu version: $(lsb_release -d)"
+        echo "Kernel: $(uname -r)"
+        
+    - name: 🔧 Set up Git LFS
+      run: |
+        echo "🔧 Setting up Git LFS..."
         git lfs install --global
+        git config --global filter.lfs.process "git-lfs filter-process"
+        git config --global filter.lfs.required true
+        git config --global filter.lfs.clean "git-lfs clean -- %f"
+        git config --global filter.lfs.smudge "git-lfs smudge -- %f"
         
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo chmod +x setup.sh
-        ./setup.sh
+    - name: 🐍 Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
         
-    - name: Configure Git
+    - name: 📦 Install Python dependencies
       run: |
-        git config --global user.email "action@github.com"
-        git config --global user.name "GitHub Action"
-        git config --global http.postBuffer 524288000
+        echo "📦 Installing Python dependencies..."
+        python -m pip install --upgrade pip
+        pip install rich click requests lz4 lzma
         
-    - name: Validate inputs
-      run: |
-        if [[ "${{ inputs.git_provider }}" == "github" ]]; then
-          if [[ -z "${{ inputs.github_token }}" ]]; then
-            echo "Error: GitHub token is required when using GitHub provider"
-            exit 1
-          fi
-        elif [[ "${{ inputs.git_provider }}" == "gitlab" ]]; then
-          if [[ -z "${{ inputs.gitlab_token }}" ]]; then
-            echo "Error: GitLab token is required when using GitLab provider"
-            exit 1
+        # Install optional dependencies for enhanced features
+        if [[ "${{ inputs.dumper_version }}" == "v2" ]]; then
+          echo "🚀 Installing v2.0 dependencies..."
+          pip install python-magic zstandard
+          
+          # Install Telegram bot dependencies if token provided
+          if [[ -n "${{ inputs.telegram_token }}" ]]; then
+            echo "🤖 Installing Telegram bot dependencies..."
+            pip install python-telegram-bot
           fi
         fi
         
-    - name: Setup authentication tokens
+    - name: 🛠️ Install system dependencies and tools
       run: |
+        echo "🛠️ Installing system dependencies..."
+        sudo apt-get update
+        sudo apt-get install -y \
+          p7zip-full unzip aria2 wget curl \
+          android-tools-adb android-tools-fastboot \
+          git-lfs \
+          build-essential \
+          python3-dev \
+          libmagic1 \
+          cpio \
+          tar \
+          gzip \
+          xz-utils \
+          lz4 \
+          zstd
+        
+        # Make setup script executable and run
+        sudo chmod +x setup.sh
+        ./setup.sh
+        
+    - name: ⚙️ Configure Git with enhanced settings
+      run: |
+        echo "⚙️ Configuring Git..."
+        git config --global user.email "dumprx-bot@github.com"
+        git config --global user.name "DumprX v2.0 Bot"
+        git config --global http.postBuffer 1048576000  # 1GB buffer
+        git config --global pack.windowMemory 256m
+        git config --global pack.packSizeLimit 2g
+        git config --global core.preloadindex true
+        git config --global core.fscache true
+        git config --global gc.auto 256
+        
+    - name: ✅ Validate workflow inputs
+      run: |
+        echo "✅ Validating inputs..."
+        
+        # Validate Git provider settings
+        if [[ "${{ inputs.git_provider }}" == "github" ]]; then
+          if [[ -z "${{ inputs.github_token }}" ]]; then
+            echo "❌ Error: GitHub token is required when using GitHub provider"
+            exit 1
+          fi
+          echo "✅ GitHub provider configuration validated"
+        elif [[ "${{ inputs.git_provider }}" == "gitlab" ]]; then
+          if [[ -z "${{ inputs.gitlab_token }}" ]]; then
+            echo "❌ Error: GitLab token is required when using GitLab provider"
+            exit 1
+          fi
+          echo "✅ GitLab provider configuration validated"
+        fi
+        
+        # Validate firmware URL
+        if [[ ! "${{ inputs.firmware_url }}" =~ ^https?:// ]]; then
+          echo "❌ Error: Invalid firmware URL format"
+          exit 1
+        fi
+        echo "✅ Firmware URL validated"
+        
+        # Validate Telegram settings
+        if [[ -n "${{ inputs.telegram_token }}" && -z "${{ inputs.telegram_chat_id }}" ]]; then
+          echo "⚠️ Warning: Telegram token provided but no chat ID specified"
+        fi
+        
+        echo "✅ All inputs validated successfully"
+        
+    - name: 🔐 Setup authentication tokens and configuration
+      run: |
+        echo "🔐 Setting up authentication tokens..."
+        
         # Create token files based on provider selection
         if [[ "${{ inputs.git_provider }}" == "github" ]]; then
           echo "${{ inputs.github_token }}" > .github_token
           if [[ -n "${{ inputs.github_orgname }}" ]]; then
             echo "${{ inputs.github_orgname }}" > .github_orgname
           fi
+          echo "✅ GitHub authentication configured"
           # Remove GitLab token file if it exists
           rm -f .gitlab_token
         elif [[ "${{ inputs.git_provider }}" == "gitlab" ]]; then
@@ -119,6 +231,7 @@ jobs:
           if [[ -n "${{ inputs.gitlab_instance }}" ]]; then
             echo "${{ inputs.gitlab_instance }}" > .gitlab_instance
           fi
+          echo "✅ GitLab authentication configured"
           # Remove GitHub token file if it exists
           rm -f .github_token
         fi
@@ -126,35 +239,208 @@ jobs:
         # Setup Telegram tokens if provided
         if [[ -n "${{ inputs.telegram_token }}" ]]; then
           echo "${{ inputs.telegram_token }}" > .tg_token
+          echo "✅ Telegram bot token configured"
         fi
         if [[ -n "${{ inputs.telegram_chat_id }}" ]]; then
           echo "${{ inputs.telegram_chat_id }}" > .tg_chat
+          echo "✅ Telegram chat ID configured"
         fi
         
-    - name: Set PUSH_TO_GITLAB environment variable
+        # Create v2.0 configuration file
+        cat > dumprx_config.json << EOF
+        {
+          "version": "${{ inputs.dumper_version }}",
+          "debug_mode": ${{ inputs.debug_mode }},
+          "enable_boot_analysis": ${{ inputs.enable_boot_analysis }},
+          "enable_manufacturer_detection": ${{ inputs.enable_manufacturer_detection }},
+          "git_provider": "${{ inputs.git_provider }}",
+          "workflow_run_id": "${{ github.run_id }}",
+          "workflow_run_number": "${{ github.run_number }}"
+        }
+        EOF
+        
+    - name: 🌐 Set environment variables for dumper
       run: |
+        echo "🌐 Setting up environment variables..."
+        
         if [[ "${{ inputs.git_provider }}" == "gitlab" ]]; then
           echo "PUSH_TO_GITLAB=true" >> $GITHUB_ENV
         else
           echo "PUSH_TO_GITLAB=false" >> $GITHUB_ENV
         fi
         
-    - name: Run firmware dumper
-      run: |
-        chmod +x dumper.sh
-        ./dumper.sh '${{ inputs.firmware_url }}'
+        # Set debug mode
+        if [[ "${{ inputs.debug_mode }}" == "true" ]]; then
+          echo "DUMPRX_DEBUG=1" >> $GITHUB_ENV
+          echo "PYTHONPATH=$PWD:$PYTHONPATH" >> $GITHUB_ENV
+        fi
         
-    - name: Cleanup sensitive files
-      if: always()
-      run: |
-        rm -f .github_token .gitlab_token .tg_token .tg_chat .github_orgname .gitlab_group .gitlab_instance
+        echo "DUMPRX_VERSION=${{ inputs.dumper_version }}" >> $GITHUB_ENV
+        echo "DUMPRX_WORKFLOW=true" >> $GITHUB_ENV
         
-    - name: Upload artifacts on failure
-      if: failure()
-      uses: actions/upload-artifact@v3
+        echo "✅ Environment configured"
+        
+    - name: 📊 Pre-execution monitoring setup
+      if: inputs.debug_mode
+      run: |
+        echo "📊 Setting up resource monitoring..."
+        
+        # Start resource monitoring in background
+        (
+          while true; do
+            echo "$(date): CPU: $(top -bn1 | grep "Cpu(s)" | awk '{print $2}' | cut -d'%' -f1)%, MEM: $(free | grep Mem | awk '{printf("%.1f%%", $3/$2 * 100.0)}'), DISK: $(df / | awk 'NR==2 {print $5}')"
+            sleep 30
+          done > resource_monitor.log &
+        )
+        
+    - name: 🚀 Run DumprX v2.0 Enhanced Firmware Dumper
+      id: dumper_run
+      run: |
+        echo "🚀 Starting DumprX ${{ inputs.dumper_version }} firmware extraction..."
+        echo "📦 Firmware URL: ${{ inputs.firmware_url }}"
+        echo "🔧 Dumper Version: ${{ inputs.dumper_version }}"
+        echo "🐛 Debug Mode: ${{ inputs.debug_mode }}"
+        
+        # Record start time
+        START_TIME=$(date +%s)
+        echo "⏰ Extraction started at: $(date)"
+        
+        # Set appropriate timeout and options based on version
+        if [[ "${{ inputs.dumper_version }}" == "v2" ]]; then
+          echo "🚀 Using DumprX v2.0 with enhanced features..."
+          
+          # Build dumprx command with options
+          DUMPRX_CMD="python -m dumprx.cli '${{ inputs.firmware_url }}'"
+          
+          if [[ "${{ inputs.debug_mode }}" == "true" ]]; then
+            DUMPRX_CMD="$DUMPRX_CMD --verbose --debug"
+          fi
+          
+          if [[ "${{ inputs.dumper_version }}" == "v2" ]]; then
+            DUMPRX_CMD="$DUMPRX_CMD --dumper-version v2"
+          fi
+          
+          # Execute v2.0 dumper
+          eval $DUMPRX_CMD
+          DUMPER_EXIT_CODE=$?
+          
+        else
+          echo "🔧 Using legacy dumper for backward compatibility..."
+          chmod +x dumper.sh
+          
+          if [[ "${{ inputs.debug_mode }}" == "true" ]]; then
+            bash -x ./dumper.sh '${{ inputs.firmware_url }}'
+          else
+            ./dumper.sh '${{ inputs.firmware_url }}'
+          fi
+          DUMPER_EXIT_CODE=$?
+        fi
+        
+        # Record end time and calculate duration
+        END_TIME=$(date +%s)
+        DURATION=$((END_TIME - START_TIME))
+        echo "⏰ Extraction completed at: $(date)"
+        echo "⏱️ Total extraction time: ${DURATION} seconds ($(($DURATION / 60)) minutes)"
+        
+        # Set outputs for later steps
+        echo "extraction_duration=${DURATION}" >> $GITHUB_OUTPUT
+        echo "extraction_success=$([[ $DUMPER_EXIT_CODE -eq 0 ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+        
+        if [[ $DUMPER_EXIT_CODE -eq 0 ]]; then
+          echo "✅ Firmware extraction completed successfully!"
+        else
+          echo "❌ Firmware extraction failed with exit code: $DUMPER_EXIT_CODE"
+          exit $DUMPER_EXIT_CODE
+        fi
+        
+    - name: 📊 Post-extraction analysis and reporting
+      if: success() || failure()
+      run: |
+        echo "📊 Generating extraction report..."
+        
+        # Count extracted files
+        if [[ -d "out" ]]; then
+          TOTAL_FILES=$(find out -type f | wc -l)
+          TOTAL_SIZE=$(du -sh out 2>/dev/null | cut -f1 || echo "Unknown")
+          echo "📁 Total files extracted: $TOTAL_FILES"
+          echo "💾 Total extraction size: $TOTAL_SIZE"
+        fi
+        
+        # Generate extraction summary
+        cat > extraction_summary.md << EOF
+        # 🚀 DumprX v2.0 Extraction Summary
+        
+        ## ℹ️ Extraction Details
+        - **Firmware URL**: \`${{ inputs.firmware_url }}\`
+        - **Dumper Version**: ${{ inputs.dumper_version }}
+        - **Debug Mode**: ${{ inputs.debug_mode }}
+        - **Git Provider**: ${{ inputs.git_provider }}
+        - **Workflow Run**: [\#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+        
+        ## ⏱️ Performance Metrics
+        - **Extraction Duration**: ${{ steps.dumper_run.outputs.extraction_duration }} seconds
+        - **Success**: ${{ steps.dumper_run.outputs.extraction_success }}
+        
+        ## 📊 Results
+        EOF
+        
+        if [[ -d "out" ]]; then
+          echo "- **Files Extracted**: $TOTAL_FILES" >> extraction_summary.md
+          echo "- **Total Size**: $TOTAL_SIZE" >> extraction_summary.md
+        fi
+        
+        echo "" >> extraction_summary.md
+        echo "*Generated by DumprX v2.0 Enhanced Workflow*" >> extraction_summary.md
+        
+    - name: 📤 Upload extraction artifacts
+      if: success()
+      uses: actions/upload-artifact@v4
       with:
-        name: debug-logs
+        name: dumprx-v2-extraction-${{ github.run_number }}
+        path: |
+          out/
+          extraction_summary.md
+          dumprx_config.json
+        retention-days: 30
+        compression-level: 6
+        
+    - name: 📤 Upload debug artifacts on failure
+      if: failure() && inputs.debug_mode
+      uses: actions/upload-artifact@v4
+      with:
+        name: dumprx-v2-debug-logs-${{ github.run_number }}
         path: |
           out/tmp/
           *.log
-        retention-days: 7
+          resource_monitor.log
+          extraction_summary.md
+        retention-days: 14
+        
+    - name: 🧹 Cleanup sensitive files
+      if: always()
+      run: |
+        echo "🧹 Cleaning up sensitive files..."
+        rm -f .github_token .gitlab_token .tg_token .tg_chat 
+        rm -f .github_orgname .gitlab_group .gitlab_instance
+        rm -f dumprx_config.json
+        echo "✅ Cleanup completed"
+        
+    - name: 📋 Workflow Summary
+      if: always()
+      run: |
+        echo "📋 Workflow Summary" >> $GITHUB_STEP_SUMMARY
+        echo "===================" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "🚀 **DumprX Version**: ${{ inputs.dumper_version }}" >> $GITHUB_STEP_SUMMARY
+        echo "📦 **Firmware URL**: ${{ inputs.firmware_url }}" >> $GITHUB_STEP_SUMMARY
+        echo "🐙 **Git Provider**: ${{ inputs.git_provider }}" >> $GITHUB_STEP_SUMMARY
+        echo "🐛 **Debug Mode**: ${{ inputs.debug_mode }}" >> $GITHUB_STEP_SUMMARY
+        echo "⏱️ **Duration**: ${{ steps.dumper_run.outputs.extraction_duration }} seconds" >> $GITHUB_STEP_SUMMARY
+        echo "✅ **Success**: ${{ steps.dumper_run.outputs.extraction_success }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [[ "${{ steps.dumper_run.outputs.extraction_success }}" == "true" ]]; then
+          echo "🎉 **Status**: Extraction completed successfully!" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **Status**: Extraction failed. Check logs for details." >> $GITHUB_STEP_SUMMARY
+        fi
