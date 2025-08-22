@@ -1,164 +1,328 @@
-<div align="center">
+# DumprX v2.0.0 - Advanced Firmware Dumper & Extractor 🚀
 
-  <h1>DumprX</h1>
+**DumprX** is a modern, Python-based firmware dumping and extraction toolkit designed for Android firmware analysis. This is a complete rewrite of the original bash-based dumper with enhanced features, better reliability, and a modern CLI interface.
 
-  <h4>Based Upon Phoenix Firmware Dumper from DroidDumps, with some Changes and Improvements</h4>
+## ✨ Key Features
 
-</div>
+### 🔗 **Universal Download Support**
+- **Mega.nz** - Full encryption support
+- **MediaFire** - Direct link extraction
+- **Google Drive** - Large file handling with confirmation tokens
+- **AndroidFileHost** - Mirror selection and API integration
+- **OneDrive** - Share link conversion
+- **Direct HTTP/HTTPS** - With resume support and progress tracking
 
+### 📦 **Comprehensive Firmware Support**
+- **Archives**: ZIP, RAR, 7Z, TAR (all variants)
+- **Firmware Packages**: OZIP, OFP, OPS, KDZ, NB0, PAC, RUU
+- **Image Files**: Boot images, system images, super images, sparse images
+- **Manufacturer-Specific**: Oppo, OnePlus, LG, HTC, Nokia, SpreadTrum support
 
-## What this really is
+### 🔧 **Advanced Extraction**
+- **Automatic Format Detection** - File signature analysis
+- **Ramdisk Extraction** - Multiple compression format support (gzip, lzma, lz4, xz, lzop, bzip2)
+- **Partition Extraction** - System, vendor, product, boot, recovery, and more
+- **Super Image Support** - Dynamic partition extraction
+- **Build.prop Analysis** - Automatic device information extraction
 
-You might've used firmware extractor via dumpyara from https://github.com/AndroidDumps/. This toolkit is revamped edition of the tools with some improvements and feature additions.
+### 🌐 **Git Integration**
+- **GitHub Support** - Automatic repository creation and push
+- **GitLab Support** - Custom instance and group support
+- **Smart Naming** - Repositories named by brand/device/model
+- **Rich Commits** - Detailed firmware information in commit messages
 
-## The improvements over dumpyara
+### 📱 **Telegram Bot**
+- **Rich Notifications** - HTML-formatted messages with device info
+- **Error Reporting** - Automatic error notifications
+- **Status Updates** - Real-time operation progress
+- **Download Links** - Direct links to extracted firmware
 
-- [x] dumpyara's and firmware_extractor's scripts are merged with handpicked shellcheck-ed and pylint-ed improvements
-- [x] The script can download and dump firmware from different filehosters such as Mega.NZ, Mediafire.com, AndroidFileHost.com and from Google Drive URLs
-- [x] File as-well-as Folder as an input is processed thoroughly to check all kinds of supported firmware types
-- [x] All the external tools are now inherited into one place and unnesessary files removed
-- [x] Binary tools are updated to latest available source
-- [x] LG KDZ utilities are updated to support latest firmwares
-- [x] Installation requirements are narrowed down to minimal for playing with this toolkit
-- [x] Recovery Dump is made too
+## 🚀 Quick Start
 
-## Recommendations before Playing with Firmware Dumper
+### Installation
 
-This toolkit can run in any Debian/Ubuntu distribution, Ubuntu Bionic and Focal would be best, other versions are not tested.
+#### Option 1: Automatic Setup (Recommended)
+```bash
+# Clone the repository
+git clone https://github.com/Eduardob3677/DumprX.git
+cd DumprX
 
-Support for Alpine Linux is added and tested. You can give it a try.
+# Run setup script (Ubuntu/Debian/Alpine/macOS)
+python3 setup.py
+```
 
-For any other UNIX Distributions, please refer to internal [Setup File](setup.sh) and install the required programs via their own package manager.
+#### Option 2: Manual Setup
+```bash
+# Install system dependencies (Ubuntu/Debian)
+sudo apt-get update
+sudo apt-get install python3 python3-pip unzip p7zip-full git git-lfs
 
-## Prepare toolkit dependencies / requirements
+# Install DumprX
+pip install -e .
+```
 
-To prepare for this toolkit, run [Setup File](setup.sh) at first, which is needed only one time. After that, run [Main Script](dumper.sh) with proper argument.
-
-## Usage
-
-Run this toolkit with proper firmware file/folder path or URL
+### Basic Usage
 
 ```bash
-./dumper.sh 'Firmware File/Extracted Folder -OR- Supported Website Link'
+# Extract firmware from a file
+dumprx dump firmware.zip
+
+# Download and extract firmware
+dumprx dump https://mega.nz/file/...
+
+# Download only (without extraction)
+dumprx download https://mediafire.com/file/...
+
+# Show configuration
+dumprx config show
+
+# Test integrations
+dumprx test
+
+# Get help
+dumprx --help
 ```
 
-Help Context:
+## ⚙️ Configuration
 
-```text
-  >> Supported Websites:
-        1. Directly Accessible Download Link From Any Website
-        2. Filehosters like - mega.nz | mediafire | gdrive | onedrive | androidfilehost
-         >> Must Wrap Website Link Inside Single-quotes ('')
-  >> Supported File Formats For Direct Operation:
-         *.zip | *.rar | *.7z | *.tar | *.tar.gz | *.tgz | *.tar.md5
-         *.ozip | *.ofp | *.ops | *.kdz | ruu_*exe
-         system.new.dat | system.new.dat.br | system.new.dat.xz
-         system.new.img | system.img | system-sign.img | UPDATE.APP
-         *.emmc.img | *.img.ext4 | system.bin | system-p | payload.bin
-         *.nb0 | .*chunk* | *.pac | *super*.img | *system*.sin
+DumprX uses a YAML configuration file (`config.yaml`) for settings. The configuration supports:
+
+### Directory Settings
+```yaml
+directories:
+  input: "input"          # Download directory
+  output: "out"           # Extraction output directory
+  utils: "utils"          # Tools directory
+  temp: "out/tmp"         # Temporary files
 ```
 
-## GitHub Actions Workflow Usage
+### Git Integration
+```yaml
+git:
+  github:
+    token: ""             # GitHub token
+    organization: ""      # GitHub organization
+  gitlab:
+    token: ""             # GitLab token
+    group: ""             # GitLab group
+    instance: "gitlab.com" # GitLab instance
+```
 
-You can now use the automated GitHub Actions workflow to dump firmware automatically in the cloud. This workflow allows you to:
+### Telegram Bot
+```yaml
+telegram:
+  token: ""               # Telegram bot token
+  chat_id: "@channel"     # Chat or channel ID
+  enabled: true           # Enable notifications
+```
 
-- Specify a firmware URL to download and dump
-- Choose between GitHub or GitLab as your git provider
-- Configure authentication tokens through the workflow interface
-- Automatically set up Git LFS for large files
+### Legacy Token Files
+DumprX maintains backward compatibility with token files:
+- `.github_token` - GitHub token
+- `.github_orgname` - GitHub organization
+- `.gitlab_token` - GitLab token
+- `.tg_token` - Telegram bot token
+- `.tg_chat` - Telegram chat ID
 
-### How to use the workflow:
+## 🎯 Supported Sources
 
-1. **Go to the Actions tab** in your GitHub repository
-2. **Select "Firmware Dump Workflow"** from the workflow list
-3. **Click "Run workflow"** button
-4. **Fill in the required parameters:**
-   - **Firmware URL**: Direct download link to the firmware file
-   - **Git Provider**: Choose between `github` or `gitlab`
-   - **Authentication tokens**: Based on your provider selection:
-     - For GitHub: Provide `github_token` and optionally `github_orgname`
-     - For GitLab: Provide `gitlab_token` and optionally `gitlab_group` and `gitlab_instance`
-   - **Optional**: Telegram tokens for notifications
+### Direct Download Links
+Any direct HTTP/HTTPS download link with proper headers.
 
-### Workflow Features:
+### Cloud Storage
+- **Mega.nz**: `https://mega.nz/file/...` or `https://mega.nz/#!...`
+- **MediaFire**: `https://mediafire.com/file/...`
+- **Google Drive**: `https://drive.google.com/file/d/...`
+- **OneDrive**: `https://1drv.ms/...` or `https://onedrive.live.com/...`
 
-- ✅ **Automated dependency installation** using the existing setup.sh script
-- ✅ **Git LFS configuration** for handling large firmware files
-- ✅ **Disk space optimization** by cleaning up unnecessary packages
-- ✅ **8-hour timeout** for large firmware processing
-- ✅ **Automatic cleanup** of sensitive authentication data
-- ✅ **Debug artifacts** uploaded on failure for troubleshooting
+### Android-Specific
+- **AndroidFileHost**: `https://androidfilehost.com/?fid=...`
 
-### Environment Variables Configured:
+## 📱 Supported Firmware Types
 
-The workflow automatically configures the following based on your selections:
-- `PUSH_TO_GITLAB`: Set to `true` when GitLab is selected, `false` for GitHub
-- Git configuration with appropriate user email and name
-- HTTP buffer settings for large file uploads
+### Archive Formats
+- **.zip** - Standard ZIP archives
+- **.rar** - WinRAR archives
+- **.7z** - 7-Zip archives
+- **.tar, .tar.gz, .tgz** - Tape archives
 
-### Security Notes:
+### Firmware Packages
+- **.ozip** - Oppo/Realme encrypted ZIP
+- **.ofp** - Oppo firmware package
+- **.ops** - OnePlus/Oppo firmware
+- **.kdz** - LG firmware package
+- **.nb0** - Nokia/Sharp/Infocus firmware
+- **.pac** - SpreadTrum firmware
+- **ruu_*.exe** - HTC RUU files
 
-- All authentication tokens are handled securely through GitHub Actions secrets
-- Token files are automatically cleaned up after the workflow completes
-- No sensitive data is logged or stored in artifacts
+### Image Files
+- **.img** - Android image files (boot, system, etc.)
+- **.bin** - Binary image files
+- **.sin** - Sony firmware files
+- **system.new.dat** - Android DAT images
+- **super.img** - Dynamic partition images
 
-## How to use it to Upload the Dump in GitHub (Local Setup)
+## 🔧 Advanced Features
 
-- Copy your GITHUB_TOKEN in a file named .github_token and add your GitHub Organization name in another file named .github_orgname inside the project directory.
-  - If only Token is given but Organization is not, your Git Username will be used.
-- Copy your Telegram Token in a file named .tg_token and Telegram Chat/Channel ID in another file named .tg_chat file if you want to publish the uploading info in Telegram.
+### Automatic Device Detection
+DumprX automatically detects device information from firmware:
+- Device brand and model
+- Android version
+- Build fingerprint
+- Available partitions
 
-## Main Scripture Credit
+### Intelligent Extraction
+- **Format Detection**: Automatic detection by file signature and extension
+- **Manufacturer Logic**: Specific handling for different manufacturers
+- **Partition Analysis**: Automatic discovery and extraction of all partitions
+- **Ramdisk Processing**: Multi-format ramdisk extraction with compression detection
 
-As mentioned above, this toolkit is entirely focused on improving the Original Firmware Dumper available:  [Dumpyara](https://github.com/AndroidDumps/) [Phoenix Firmware Dumper](https://github.com/DroidDumps)
+### Progress Tracking
+- Real-time download progress bars
+- Extraction progress with file counts
+- Rich console output with colors and emoji
+- Detailed logging with configurable levels
 
-Credit for those tools goes to everyone whosoever worked hard to put all those programs in one place to make an awesome project.
+## 🤖 GitHub Actions Integration
 
-## Download Utilities Credits
+DumprX includes an updated GitHub Actions workflow for automated firmware processing:
 
-- mega-media-drive_dl.sh (for downloading from mega.nz, mediafire.com, google drive)
-  - shell script, most of it's part belongs to badown by @stck-lzm
-- afh_dl (for downloading from androidfilehosts.com)
-  - python script, by @kade-robertson
-- aria2c
-- wget
+```yaml
+name: Extract Firmware
+on:
+  workflow_dispatch:
+    inputs:
+      firmware_url:
+        description: 'Firmware URL'
+        required: true
+      git_provider:
+        description: 'Git provider (github/gitlab)'
+        default: 'github'
+```
 
-## Internal Utilities Credits
+The workflow automatically:
+1. Sets up the environment
+2. Installs DumprX
+3. Downloads and extracts firmware
+4. Uploads to the specified git provider
+5. Sends Telegram notifications
 
-- sdat2img.py (system-dat-to-img v1.2, python script)
-  - by @xpirt, @luxi78, @howellzhu
-- simg2img (Android sparse-to-raw images converter, binary built from source)
-  - by @anestisb
-- unsin (Xperia Firmware Unpacker v1.13, binary)
-  - by @IgorEisberg
-- extract\_android\_ota\_payload.py (OTA Payload Extractor, python script)
-  - by @cyxx, with metadata update from [Android's update_engine Git Repository](https://android.googlesource.com/platform/system/update_engine/)
-- extract-dtb.py (dtbs extractor v1.3, python script)
-  - by @PabloCastellano
-- dtc (Device Tree Compiler v1.6, binary built from source)
-  - by kernel.org, from their [dtc Git Repository](https://git.kernel.org/pub/scm/utils/dtc/dtc.git)
-- vmlinux-to-elf and kallsyms_finder (kernel binary to analyzable ELF converter, python scripts)
-  - by @marin-m
-- ozipdecrypt.py (Oppo/Oneplus .ozip Firmware decrypter v1.2, python script)
-  - by @bkerler
-- ofp\_qc\_extract.py and ofp\_mtk\_decrypt.py (Oppo .ofp firmware extractor, python scripts)
-  - by @bkerler
-- opscrypto.py (OnePlus/Oppo ops firmware extractor, python script)
-  - by @bkerler
-- lpunpack (OnePlus/Other super.img unpacker, binary built from source)
-  - by @LonelyFool
-- splituapp.py (UPDATE.APP extractor, python script)
-  - by @superr
-- pacextractor (Extractor of SpreadTrum firmware files with extension pac. See)
-  - by @HemanthJabalpuri
-- nb0-extract (Nokia/Sharp/Infocus/Essential nb0-extract, binary built from source)
-  - by Heineken @Eddie07 / "FIH mobile"
-- kdztools' unkdz.py and undz.py (LG KDZ and DZ Utilities, python scripts)
-  - Originally by IOMonster (thecubed on XDA), Modified by @ehem (Elliott Mitchell) and improved by @steadfasterX
-- RUU\_Decrypt\_Tool (HTC RUU/ROM Decryption Tool v3.6.8, binary)
-  - by @nkk71 and @CaptainThrowback
-- extract-ikconfig (.config file extractor from kernel image, shell script)
-  - From within linux's source code by @torvalds
-- unpackboot.sh (bootimg and ramdisk extractor, modified shell script)
-  - Originally by @xiaolu and @carlitros900, stripped to unpack functionallity, by me @rokibhasansagar
-- twrpdtgen by @SebaUbuntu
+## 📋 Migration from v1.x
+
+### Key Changes
+- **Python CLI** instead of bash scripts
+- **Modular architecture** with separate packages
+- **Enhanced configuration** with YAML support
+- **Improved error handling** and logging
+- **Better progress tracking** and user feedback
+
+### Migration Steps
+1. **Backup your configuration** (token files will still work)
+2. **Run the new setup**: `python3 setup.py`
+3. **Test the installation**: `dumprx test`
+4. **Update your workflows** to use `dumprx` commands
+
+### Compatibility
+- All original functionality is preserved
+- Token files (`.github_token`, etc.) still work
+- GitHub Actions inputs remain the same
+- Output directory structure is unchanged
+
+## 🛠️ Development
+
+### Project Structure
+```
+dumprx/
+├── core/           # Core functionality
+├── downloaders/    # Download implementations
+├── extractors/     # Extraction implementations
+├── utils/          # Utility functions
+└── cli.py          # Command-line interface
+```
+
+### Running Tests
+```bash
+# Test integrations
+dumprx test
+
+# Test with sample firmware
+dumprx dump test_firmware.zip --force
+
+# Test downloads
+dumprx download https://example.com/firmware.zip
+```
+
+## 🆘 Troubleshooting
+
+### Common Issues
+
+**Command not found: dumprx**
+```bash
+# Reinstall the package
+pip install -e .
+
+# Or use module syntax
+python3 -m dumprx.cli --help
+```
+
+**Permission denied errors**
+```bash
+# Fix directory permissions
+sudo chown -R $USER:$USER .
+
+# Or run setup again
+python3 setup.py
+```
+
+**Git upload fails**
+```bash
+# Check credentials
+dumprx test
+
+# Verify token permissions
+# GitHub: repo, user scopes
+# GitLab: api, read_user, write_repository scopes
+```
+
+### Debug Mode
+```bash
+# Enable verbose output
+dumprx --verbose dump firmware.zip
+
+# Or set debug level in config
+dumprx config show
+```
+
+## 📜 License
+
+DumprX is licensed under the GNU General Public License v3.0. See [LICENSE](LICENSE) for details.
+
+## 🙏 Credits
+
+### Original Project
+Based on the excellent work from:
+- [AndroidDumps/dumpyara](https://github.com/AndroidDumps/dumpyara)
+- [DroidDumps/phoenix](https://github.com/DroidDumps/phoenix)
+
+### External Tools
+DumprX integrates many excellent tools:
+- **LG KDZ Tools** by @steadfasterX, @ehem, and IOMonster
+- **Oppo Tools** by @bkerler (ozipdecrypt, ofp tools, opscrypto)
+- **VMLinux Tools** by @marin-m
+- **Boot Tools** by @xiaolu and @carlitros900
+- **And many more** - see source code for complete attribution
+
+### Contributors
+- **@Eduardob3677** - Project maintainer and Python rewrite
+- **Community contributors** - Bug reports, features, and improvements
+
+## 🔗 Links
+
+- **Repository**: https://github.com/Eduardob3677/DumprX
+- **Issues**: https://github.com/Eduardob3677/DumprX/issues
+- **Releases**: https://github.com/Eduardob3677/DumprX/releases
+- **Documentation**: https://github.com/Eduardob3677/DumprX/wiki
+
+---
+
+**DumprX v2.0.0** - Making firmware analysis accessible, reliable, and modern. 🚀

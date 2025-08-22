@@ -28,9 +28,10 @@ input/
 tmp/
 out/
 
-# External tools
-utils/oppo_*
-utils/vmlinux*
+# External tools (auto-downloaded)
+utils/oppo_ozip_decrypt/
+utils/oppo_decrypt/
+utils/vmlinux-to-elf/
 utils/android_tools/
 utils/pacextractor/
 
@@ -46,3 +47,7 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Temporary files
+*.tmp
+*.temp
