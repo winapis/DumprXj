@@ -6,6 +6,11 @@ import logging
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
+from ..vendors.lg import LGExtractor
+from ..vendors.htc import HTCExtractor
+from ..vendors.oppo import OppoExtractor
+from ..vendors.generic import GenericExtractor
+
 logger = logging.getLogger(__name__)
 
 class FirmwareExtractor:
@@ -13,6 +18,11 @@ class FirmwareExtractor:
         self.config = config_manager
         self.utils_dir = Path("utils")
         self.temp_dir = None
+        
+        self.lg_extractor = LGExtractor(self.utils_dir)
+        self.htc_extractor = HTCExtractor(self.utils_dir)
+        self.oppo_extractor = OppoExtractor(self.utils_dir)
+        self.generic_extractor = GenericExtractor(self.utils_dir)
         
     def extract(self, firmware_path: Path, firmware_type: str, output_dir: Path) -> Dict[str, Any]:
         self.temp_dir = Path(tempfile.mkdtemp(prefix="dumprx_"))
@@ -42,96 +52,58 @@ class FirmwareExtractor:
     def _extract_lg_kdz(self, firmware_path: Path, output_dir: Path) -> Dict[str, Any]:
         logger.info("Extracting LG KDZ firmware")
         
-        kdz_extract = self.utils_dir / "kdztools" / "unkdz.py"
-        
         shutil.copy(firmware_path, self.temp_dir)
         os.chdir(self.temp_dir)
         
-        cmd = ["python3", str(kdz_extract), "-f", firmware_path.name, "-x", "-o", "./"]
-        subprocess.run(cmd, check=True, capture_output=True)
-        
-        dz_files = list(self.temp_dir.glob("*.dz"))
-        if dz_files:
-            dz_extract = self.utils_dir / "kdztools" / "undz.py"
-            cmd = ["python3", str(dz_extract), "-f", dz_files[0].name, "-s", "-o", "./"]
-            subprocess.run(cmd, check=True, capture_output=True)
+        extraction_info = self.lg_extractor.extract_kdz(firmware_path, self.temp_dir)
         
         return self._process_extracted_files(output_dir)
     
     def _extract_htc_ruu(self, firmware_path: Path, output_dir: Path) -> Dict[str, Any]:
         logger.info("Extracting HTC RUU firmware")
         
-        ruu_decrypt = self.utils_dir / "RUU_Decrypt_Tool"
-        
-        os.chdir(self.temp_dir)
-        cmd = [str(ruu_decrypt), str(firmware_path)]
-        subprocess.run(cmd, check=True, capture_output=True)
+        extraction_info = self.htc_extractor.extract_ruu(firmware_path, self.temp_dir)
         
         return self._process_extracted_files(output_dir)
     
     def _extract_oppo_ozip(self, firmware_path: Path, output_dir: Path) -> Dict[str, Any]:
         logger.info("Extracting OPPO OZIP firmware")
         
-        ozip_decrypt = self.utils_dir / "oppo_ozip_decrypt" / "ozipdecrypt.py"
-        
-        os.chdir(self.temp_dir)
-        cmd = ["python3", str(ozip_decrypt), str(firmware_path)]
-        subprocess.run(cmd, check=True, capture_output=True)
+        extraction_info = self.oppo_extractor.extract_ozip(firmware_path, self.temp_dir)
         
         return self._process_extracted_files(output_dir)
     
     def _extract_oppo_ofp(self, firmware_path: Path, output_dir: Path) -> Dict[str, Any]:
         logger.info("Extracting OPPO OFP firmware")
         
-        ofp_decrypt = self.utils_dir / "oppo_decrypt" / "ofp_qc_decrypt.py"
-        
-        os.chdir(self.temp_dir)
-        cmd = ["python3", str(ofp_decrypt), str(firmware_path)]
-        subprocess.run(cmd, check=True, capture_output=True)
+        extraction_info = self.oppo_extractor.extract_ofp(firmware_path, self.temp_dir)
         
         return self._process_extracted_files(output_dir)
     
     def _extract_ab_ota(self, firmware_path: Path, output_dir: Path) -> Dict[str, Any]:
         logger.info("Extracting A/B OTA payload")
         
-        payload_extractor = self.utils_dir / "bin" / "payload-dumper-go"
-        
-        os.chdir(self.temp_dir)
-        
         if firmware_path.suffix == '.zip':
-            self._extract_archive(firmware_path, self.temp_dir)
+            self.generic_extractor.extract_archive(firmware_path, self.temp_dir)
             payload_files = list(self.temp_dir.glob("**/payload.bin"))
             if payload_files:
                 firmware_path = payload_files[0]
         
-        cmd = [str(payload_extractor), "-c", str(os.cpu_count()), "-o", str(self.temp_dir), str(firmware_path)]
-        subprocess.run(cmd, check=True, capture_output=True)
+        extraction_info = self.generic_extractor.extract_payload(firmware_path, self.temp_dir)
         
         return self._process_extracted_files(output_dir)
     
     def _extract_super_image(self, firmware_path: Path, output_dir: Path) -> Dict[str, Any]:
         logger.info("Extracting super image")
         
-        lpunpack = self.utils_dir / "lpunpack"
-        
-        os.chdir(self.temp_dir)
-        cmd = [str(lpunpack), str(firmware_path), str(self.temp_dir)]
-        subprocess.run(cmd, check=True, capture_output=True)
+        extraction_info = self.generic_extractor.extract_super_image(firmware_path, self.temp_dir)
         
         return self._process_extracted_files(output_dir)
     
     def _extract_archive(self, firmware_path: Path, output_dir: Path) -> Dict[str, Any]:
         logger.info(f"Extracting archive: {firmware_path.suffix}")
         
-        os.chdir(self.temp_dir)
-        
-        if shutil.which("7zz"):
-            cmd = ["7zz", "x", str(firmware_path), f"-o{self.temp_dir}"]
-        else:
-            sevenzip_bin = self.utils_dir / "bin" / "7zz"
-            cmd = [str(sevenzip_bin), "x", str(firmware_path), f"-o{self.temp_dir}"]
-        
-        subprocess.run(cmd, check=True, capture_output=True)
+        extraction_info = self.generic_extractor.extract_archive(firmware_path, self.temp_dir)
         
         return self._process_extracted_files(output_dir)
     
