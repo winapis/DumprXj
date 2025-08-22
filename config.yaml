@@ -1,0 +1,102 @@
+# Default configuration for DumprX
+# All paths are relative to the project directory unless absolute paths are specified
+
+# Project directories
+directories:
+  input: "input"          # Firmware download/preload directory
+  output: "out"           # Final extracted files directory
+  utils: "utils"          # Supportive programs directory
+  temp: "out/tmp"         # Temporary working directory
+
+# Git integration settings
+git:
+  # GitHub settings (will be read from .github_token and .github_orgname files if present)
+  github:
+    token: ""             # GitHub token (can be set via file .github_token)
+    organization: ""      # GitHub organization (can be set via file .github_orgname)
+    
+  # GitLab settings (will be read from .gitlab_token, .gitlab_group, .gitlab_instance files if present)
+  gitlab:
+    token: ""             # GitLab token (can be set via file .gitlab_token)
+    group: ""             # GitLab group (can be set via file .gitlab_group)
+    instance: "gitlab.com" # GitLab instance (can be set via file .gitlab_instance)
+
+# Telegram bot settings (will be read from .tg_token and .tg_chat files if present)
+telegram:
+  token: ""               # Telegram bot token (can be set via file .tg_token)
+  chat_id: "@DumprXDumps" # Telegram chat/channel ID (can be set via file .tg_chat)
+  enabled: true           # Enable/disable Telegram notifications
+
+# Download settings
+download:
+  # User agents for different services
+  user_agents:
+    default: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    mega: "MEGAsync/4.8.8.0"
+    
+  # Chunk size for downloads (in bytes)
+  chunk_size: 8192
+  
+  # Timeout settings (in seconds)
+  timeout: 300
+  retry_attempts: 3
+  retry_delay: 5
+
+# Extraction settings
+extraction:
+  # Supported firmware types and their extensions
+  supported_formats:
+    archives: [".zip", ".rar", ".7z", ".tar", ".tar.gz", ".tgz", ".tar.md5"]
+    firmware: [".ozip", ".ofp", ".ops", ".kdz", ".nb0", ".pac"]
+    images: [".img", ".bin", ".sin"]
+    executables: ["ruu_*.exe"]
+    
+  # Partitions to extract from super images
+  partitions:
+    - "system"
+    - "vendor" 
+    - "product"
+    - "system_ext"
+    - "odm"
+    - "boot"
+    - "recovery"
+    - "vbmeta"
+    - "dtbo"
+    
+  # Ramdisk format detection order
+  ramdisk_formats: ["gzip", "lz4", "lzma", "xz", "lzop", "bzip2"]
+
+# External tools (will be auto-downloaded from GitHub if not present)
+external_tools:
+  repositories:
+    - "bkerler/oppo_ozip_decrypt"
+    - "bkerler/oppo_decrypt" 
+    - "marin-m/vmlinux-to-elf"
+    - "ShivamKumarJha/android_tools"
+    - "HemanthJabalpuri/pacextractor"
+
+# Logging settings
+logging:
+  level: "INFO"           # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: ""                # Leave empty to log to console only
+  max_size: "10MB"        # Max log file size before rotation
+  backup_count: 5         # Number of backup log files to keep
+
+# Console output settings
+console:
+  colors: true            # Enable colored output
+  progress_bars: true     # Show progress bars for operations
+  banner: true            # Show ASCII art banner
+  emoji: true             # Use emoji in output messages
+
+# Advanced settings
+advanced:
+  # Maximum file size for in-memory operations (in MB)
+  max_memory_file_size: 100
+  
+  # Number of parallel extraction workers
+  max_workers: 4
+  
+  # Enable experimental features
+  experimental: false

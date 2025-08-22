@@ -1,3 +1,4 @@
+# Token files
 .github_token
 .github_orgname
 .gitlab_token
@@ -5,11 +6,43 @@
 .gitlab_instance
 .tg_token
 .tg_chat
+
+# Python
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+env/
 .venv/
+venv/
+ENV/
+env.bak/
+venv.bak/
+*.egg-info/
+dist/
+build/
+
+# Project directories
 input/
 tmp/
 out/
-*.pyc
-__pycache__
+
+# External tools
 utils/oppo_*
 utils/vmlinux*
+utils/android_tools/
+utils/pacextractor/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
