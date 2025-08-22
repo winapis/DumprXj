@@ -1,14 +1,14 @@
-name: Firmware Dump Workflow
+name: DumprX Firmware Processing
 
 on:
   workflow_dispatch:
     inputs:
       firmware_url:
-        description: 'Firmware URL to dump'
+        description: 'Firmware URL to process'
         required: true
         type: string
       git_provider:
-        description: 'Git provider to upload the dump'
+        description: 'Git provider for repository upload'
         required: true
         type: choice
         options:
@@ -16,42 +16,39 @@ on:
           - gitlab
         default: github
       github_token:
-        description: 'GitHub Token (required if using GitHub provider)'
+        description: 'GitHub Token (required for GitHub provider)'
         required: false
         type: string
       github_orgname:
-        description: 'GitHub Organization Name (optional, uses username if not provided)'
+        description: 'GitHub Organization (optional)'
         required: false
         type: string
       gitlab_token:
-        description: 'GitLab Token (required if using GitLab provider)'
+        description: 'GitLab Token (required for GitLab provider)'
         required: false
         type: string
       gitlab_group:
-        description: 'GitLab Group Name (optional, uses username if not provided)'
+        description: 'GitLab Group (optional)'
         required: false
         type: string
       gitlab_instance:
-        description: 'GitLab Instance URL (default: gitlab.com)'
+        description: 'GitLab Instance (default: gitlab.com)'
         required: false
         type: string
         default: 'gitlab.com'
       telegram_token:
-        description: 'Telegram Bot Token (optional, for notifications)'
+        description: 'Telegram Bot Token (optional)'
         required: false
         type: string
       telegram_chat_id:
-        description: 'Telegram Chat/Channel ID (optional, for notifications)'
+        description: 'Telegram Chat ID (optional)'
         required: false
         type: string
 
-env:
-  PUSH_TO_GITLAB: ${{ inputs.git_provider == 'gitlab' }}
-
 jobs:
-  dump-firmware:
+  process-firmware:
     runs-on: ubuntu-latest
-    timeout-minutes: 480  # 8 hours timeout for large firmware files
+    timeout-minutes: 480
     
     steps:
     - name: Checkout repository
@@ -63,22 +60,19 @@ jobs:
         sudo rm -rf /opt/ghc
         sudo rm -rf "/usr/local/share/boost"
         sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-        sudo apt-get remove -y '^aspnetcore-.*'
-        sudo apt-get remove -y '^dotnet-.*'
-        sudo apt-get remove -y '^llvm-.*'
-        sudo apt-get remove -y 'php.*'
+        sudo apt-get remove -y '^aspnetcore-.*' '^dotnet-.*' '^llvm-.*' 'php.*'
         sudo apt-get autoremove -y
         sudo apt-get clean
         df -h
         
-    - name: Set up Git LFS
-      run: |
-        git lfs install --global
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
         
     - name: Install dependencies
       run: |
-        sudo apt-get update
-        sudo chmod +x setup.sh
+        chmod +x setup.sh
         ./setup.sh
         
     - name: Configure Git
@@ -86,63 +80,40 @@ jobs:
         git config --global user.email "action@github.com"
         git config --global user.name "GitHub Action"
         git config --global http.postBuffer 524288000
+        git lfs install --global
         
     - name: Validate inputs
       run: |
-        if [[ "${{ inputs.git_provider }}" == "github" ]]; then
-          if [[ -z "${{ inputs.github_token }}" ]]; then
-            echo "Error: GitHub token is required when using GitHub provider"
-            exit 1
-          fi
-        elif [[ "${{ inputs.git_provider }}" == "gitlab" ]]; then
-          if [[ -z "${{ inputs.gitlab_token }}" ]]; then
-            echo "Error: GitLab token is required when using GitLab provider"
-            exit 1
-          fi
+        if [[ "${{ inputs.git_provider }}" == "github" && -z "${{ inputs.github_token }}" ]]; then
+          echo "❌ GitHub token required for GitHub provider"
+          exit 1
+        elif [[ "${{ inputs.git_provider }}" == "gitlab" && -z "${{ inputs.gitlab_token }}" ]]; then
+          echo "❌ GitLab token required for GitLab provider"
+          exit 1
         fi
         
     - name: Setup authentication tokens
       run: |
-        # Create token files based on provider selection
-        if [[ "${{ inputs.git_provider }}" == "github" ]]; then
+        # GitHub configuration
+        if [[ "${{ inputs.git_provider }}" == "github" && -n "${{ inputs.github_token }}" ]]; then
           echo "${{ inputs.github_token }}" > .github_token
-          if [[ -n "${{ inputs.github_orgname }}" ]]; then
-            echo "${{ inputs.github_orgname }}" > .github_orgname
-          fi
-          # Remove GitLab token file if it exists
-          rm -f .gitlab_token
-        elif [[ "${{ inputs.git_provider }}" == "gitlab" ]]; then
+          [[ -n "${{ inputs.github_orgname }}" ]] && echo "${{ inputs.github_orgname }}" > .github_orgname
+        fi
+        
+        # GitLab configuration
+        if [[ "${{ inputs.git_provider }}" == "gitlab" && -n "${{ inputs.gitlab_token }}" ]]; then
           echo "${{ inputs.gitlab_token }}" > .gitlab_token
-          if [[ -n "${{ inputs.gitlab_group }}" ]]; then
-            echo "${{ inputs.gitlab_group }}" > .gitlab_group
-          fi
-          if [[ -n "${{ inputs.gitlab_instance }}" ]]; then
-            echo "${{ inputs.gitlab_instance }}" > .gitlab_instance
-          fi
-          # Remove GitHub token file if it exists
-          rm -f .github_token
+          [[ -n "${{ inputs.gitlab_group }}" ]] && echo "${{ inputs.gitlab_group }}" > .gitlab_group
+          [[ -n "${{ inputs.gitlab_instance }}" ]] && echo "${{ inputs.gitlab_instance }}" > .gitlab_instance
         fi
         
-        # Setup Telegram tokens if provided
-        if [[ -n "${{ inputs.telegram_token }}" ]]; then
-          echo "${{ inputs.telegram_token }}" > .tg_token
-        fi
-        if [[ -n "${{ inputs.telegram_chat_id }}" ]]; then
-          echo "${{ inputs.telegram_chat_id }}" > .tg_chat
-        fi
+        # Telegram configuration
+        [[ -n "${{ inputs.telegram_token }}" ]] && echo "${{ inputs.telegram_token }}" > .tg_token
+        [[ -n "${{ inputs.telegram_chat_id }}" ]] && echo "${{ inputs.telegram_chat_id }}" > .tg_chat
         
-    - name: Set PUSH_TO_GITLAB environment variable
+    - name: Process firmware
       run: |
-        if [[ "${{ inputs.git_provider }}" == "gitlab" ]]; then
-          echo "PUSH_TO_GITLAB=true" >> $GITHUB_ENV
-        else
-          echo "PUSH_TO_GITLAB=false" >> $GITHUB_ENV
-        fi
-        
-    - name: Run firmware dumper
-      run: |
-        chmod +x dumper.sh
-        ./dumper.sh '${{ inputs.firmware_url }}'
+        python3 dumprx.py dump '${{ inputs.firmware_url }}' --output ./firmware_output
         
     - name: Cleanup sensitive files
       if: always()
@@ -155,6 +126,6 @@ jobs:
       with:
         name: debug-logs
         path: |
-          out/tmp/
+          firmware_output/
           *.log
         retention-days: 7
