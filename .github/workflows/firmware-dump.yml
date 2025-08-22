@@ -139,10 +139,14 @@ jobs:
           echo "PUSH_TO_GITLAB=false" >> $GITHUB_ENV
         fi
         
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .
+        
     - name: Run firmware dumper
       run: |
-        chmod +x dumper.sh
-        ./dumper.sh '${{ inputs.firmware_url }}'
+        dumprx dump '${{ inputs.firmware_url }}'
         
     - name: Cleanup sensitive files
       if: always()

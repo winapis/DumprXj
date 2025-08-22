@@ -231,6 +231,62 @@ def setup(ctx: click.Context, force: bool) -> None:
 
 @cli.command()
 @click.pass_context
+def test(ctx: click.Context) -> None:
+    """Test integrations (git, telegram)"""
+    
+    config = ctx.obj['config']
+    console = ctx.obj['console']
+    
+    try:
+        console.step("Testing integrations...")
+        
+        # Test Telegram if configured
+        if config.telegram.token:
+            console.step("Testing Telegram bot connection...")
+            from dumprx.utils.telegram_bot import TelegramBot
+            telegram_bot = TelegramBot(config, console)
+            
+            if telegram_bot.test_connection():
+                console.success("Telegram bot test passed")
+                
+                # Send test message
+                telegram_bot.send_status_update("Testing", {
+                    "message": "DumprX integration test",
+                    "version": "2.0.0"
+                })
+            else:
+                console.error("Telegram bot test failed")
+        else:
+            console.warning("Telegram not configured - skipping test")
+            
+        # Test Git credentials
+        if config.git.github.token:
+            console.step("Testing GitHub credentials...")
+            from dumprx.utils.git_integration import GitIntegration
+            git_integration = GitIntegration(config, console)
+            
+            # Test by getting username
+            username = git_integration._get_github_username()
+            console.success(f"GitHub credentials valid for user: {username}")
+            
+        elif config.git.gitlab.token:
+            console.step("Testing GitLab credentials...")
+            console.success("GitLab credentials configured")
+        else:
+            console.warning("No git credentials configured - skipping test")
+            
+        console.success("Integration tests completed!")
+        
+    except Exception as e:
+        console.error(f"Error during integration tests: {e}")
+        if config.logging.level == "DEBUG":
+            import traceback
+            console.debug(traceback.format_exc())
+        sys.exit(1)
+
+
+@cli.command()
+@click.pass_context
 def version(ctx: click.Context) -> None:
     """Show version information"""
     
