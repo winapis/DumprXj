@@ -15,6 +15,11 @@ class Config:
         self.out_dir = self.project_dir / "out"
         self.tmp_dir = self.out_dir / "tmp"
         
+        # V2.0 enhanced attributes
+        self.work_dir = self.project_dir / "work"
+        self.tools_dir = self.utils_dir
+        self.git_enabled = True  # Enable git features by default
+        
         # External tools that need to be cloned
         self.external_tools = [
             "bkerler/oppo_ozip_decrypt",
@@ -97,6 +102,7 @@ class Config:
         self.tmp_dir.mkdir(parents=True, exist_ok=True)
         self.out_dir.mkdir(parents=True, exist_ok=True)
         self.input_dir.mkdir(parents=True, exist_ok=True)
+        self.work_dir.mkdir(parents=True, exist_ok=True)  # V2.0 work directory
         
         # Clean tmp directory
         if self.tmp_dir.exists():

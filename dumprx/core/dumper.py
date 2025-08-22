@@ -2,6 +2,7 @@ import os
 import shutil
 import subprocess
 import re
+import time
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 import logging
@@ -26,15 +27,137 @@ class FirmwareDumper:
         self.detector = FirmwareDetector(config)
         self.device_detector = DeviceDetector(config)
         
+        # Import enhanced components for v2.0
+        try:
+            from dumprx.extractors.manufacturer_detector import ManufacturerDetector
+            from dumprx.extractors.enhanced_boot_analyzer import EnhancedBootAnalyzer
+            from dumprx.downloaders.enhanced_downloader import EnhancedDownloader
+            
+            self.manufacturer_detector = ManufacturerDetector(config)
+            self.boot_analyzer = EnhancedBootAnalyzer(config)
+            self.enhanced_downloader = EnhancedDownloader(config)
+            self.v2_available = True
+        except ImportError as e:
+            logger.warning(f"V2.0 features not available: {e}")
+            self.v2_available = False
+        
     def setup(self):
         """Setup directories and external tools"""
         self.config.setup_directories()
         self.external_tools.setup_tools()
+    
+    def process_firmware_v2(self, firmware_path: str, manufacturer_info=None) -> Dict[str, Any]:
+        """Enhanced v2.0 firmware processing pipeline with manufacturer-specific extraction"""
+        
+        if not self.v2_available:
+            logger.warning("V2.0 features not available, falling back to legacy mode")
+            return self.process_firmware(firmware_path)
+        
+        try:
+            print_info(f"🚀 Processing firmware with DumprX v2.0: {firmware_path}")
+            
+            results = {
+                'success': False,
+                'firmware_path': firmware_path,
+                'manufacturer_info': manufacturer_info,
+                'extracted_files': [],
+                'boot_analysis': {},
+                'device_info': {},
+                'output_dir': None,
+                'processing_time': 0,
+                'extraction_method': 'v2.0_enhanced'
+            }
+            
+            start_time = time.time()
+            
+            # Step 1: Handle URL downloads
+            firmware_path_obj = Path(firmware_path)
+            if self._is_url(firmware_path):
+                print_info("🌐 URL detected, using enhanced downloader...")
+                
+                def progress_callback(progress, downloaded, total):
+                    if progress % 10 == 0:  # Report every 10%
+                        print_info(f"📥 Download progress: {progress}%")
+                
+                downloaded_path = self.enhanced_downloader.download(
+                    firmware_path, 
+                    progress_callback=progress_callback
+                )
+                
+                if not downloaded_path:
+                    print_error("❌ Enhanced download failed")
+                    return results
+                
+                firmware_path_obj = downloaded_path
+                results['firmware_path'] = str(firmware_path_obj)
+            
+            # Validate firmware path
+            if not firmware_path_obj.exists():
+                print_error(f"❌ Firmware file/folder not found: {firmware_path_obj}")
+                return results
+            
+            # Step 2: Manufacturer detection (if not already done)
+            if not manufacturer_info:
+                print_info("🔍 Detecting manufacturer...")
+                manufacturer_info = self.manufacturer_detector.detect_manufacturer(firmware_path_obj)
+                results['manufacturer_info'] = manufacturer_info
+            
+            if manufacturer_info:
+                print_info(f"🏭 Detected manufacturer: {manufacturer_info.name.title()}")
+                print_info(f"📱 Model: {manufacturer_info.model or 'Unknown'}")
+                print_info(f"🔧 Extraction method: {manufacturer_info.extraction_method}")
+            
+            # Step 3: Create output directory
+            output_dir = self._create_output_directory_v2(firmware_path_obj, manufacturer_info)
+            results['output_dir'] = str(output_dir)
+            
+            # Step 4: Extract firmware using manufacturer-specific method
+            print_info("📦 Extracting firmware...")
+            extracted_files = self._extract_firmware_v2(firmware_path_obj, manufacturer_info, output_dir)
+            results['extracted_files'] = extracted_files
+            
+            if not extracted_files:
+                print_warning("⚠️ No files extracted, trying legacy method...")
+                legacy_result = self.process_firmware(str(firmware_path_obj))
+                results['success'] = legacy_result
+                results['extraction_method'] = 'fallback_legacy'
+                return results
+            
+            # Step 5: Enhanced boot image analysis
+            print_info("🥾 Analyzing boot images...")
+            boot_results = self._analyze_boot_images_v2(output_dir)
+            results['boot_analysis'] = boot_results
+            
+            # Step 6: Device information extraction
+            print_info("📱 Extracting device information...")
+            device_info = self._extract_device_info_v2(output_dir, manufacturer_info)
+            results['device_info'] = device_info
+            
+            # Step 7: Generate reports and documentation
+            print_info("📄 Generating reports...")
+            self._generate_extraction_report_v2(results, output_dir)
+            
+            # Step 8: Git repository setup (if configured)
+            if self.config.git_enabled:
+                print_info("🐙 Setting up Git repository...")
+                self._setup_git_repository_v2(output_dir, results)
+            
+            results['success'] = True
+            results['processing_time'] = time.time() - start_time
+            
+            print_success(f"✅ V2.0 extraction completed in {results['processing_time']:.1f}s")
+            return results
+            
+        except Exception as e:
+            logger.exception("Error in v2.0 firmware processing")
+            print_error(f"❌ V2.0 processing failed: {str(e)}")
+            results['error'] = str(e)
+            return results
         
     def process_firmware(self, firmware_path: str) -> bool:
-        """Main firmware processing pipeline"""
+        """Legacy firmware processing pipeline (maintained for backward compatibility)"""
         try:
-            print_info(f"Processing firmware: {firmware_path}")
+            print_info(f"🔧 Processing firmware with legacy dumper: {firmware_path}")
             
             # Detect if it's a URL or file path
             if self._is_url(firmware_path):
@@ -402,3 +525,374 @@ class FirmwareDumper:
         # - Create git repository
         
         print_success("File processing completed")
+    
+    # V2.0 Enhanced Methods
+    def _create_output_directory_v2(self, firmware_path: Path, manufacturer_info) -> Path:
+        """Create organized output directory for v2.0"""
+        
+        # Generate directory name based on manufacturer and device info
+        if manufacturer_info and manufacturer_info.model:
+            dir_name = f"{manufacturer_info.name}_{manufacturer_info.model}_{int(time.time())}"
+        else:
+            dir_name = f"{firmware_path.stem}_{int(time.time())}"
+        
+        # Clean directory name
+        dir_name = re.sub(r'[^\w\-_.]', '_', dir_name)
+        
+        output_dir = Path(self.config.work_dir) / 'extractions' / dir_name
+        output_dir.mkdir(parents=True, exist_ok=True)
+        
+        return output_dir
+    
+    def _extract_firmware_v2(self, firmware_path: Path, manufacturer_info, output_dir: Path) -> List[str]:
+        """Extract firmware using manufacturer-specific v2.0 methods"""
+        
+        extracted_files = []
+        
+        try:
+            if manufacturer_info and hasattr(self, 'manufacturer_detector'):
+                # Get required tools for this manufacturer
+                required_tools = self.manufacturer_detector.get_extraction_tools(manufacturer_info)
+                
+                # Verify tools are available
+                missing_tools = []
+                for tool in required_tools:
+                    if not self.external_tools.is_tool_available(tool):
+                        missing_tools.append(tool)
+                
+                if missing_tools:
+                    print_warning(f"⚠️ Missing tools for {manufacturer_info.name}: {', '.join(missing_tools)}")
+                    print_info("📦 Falling back to generic extraction...")
+                    return self._extract_firmware_generic(firmware_path, output_dir)
+                
+                # Use manufacturer-specific extraction
+                if manufacturer_info.extraction_method == 'tar_extraction':
+                    extracted_files = self._extract_tar_firmware(firmware_path, output_dir)
+                elif manufacturer_info.extraction_method == 'ozip_decryption':
+                    extracted_files = self._extract_ozip_firmware(firmware_path, output_dir)
+                elif manufacturer_info.extraction_method == 'update_app_extraction':
+                    extracted_files = self._extract_update_app_firmware(firmware_path, output_dir)
+                elif manufacturer_info.extraction_method == 'kdz_extraction':
+                    extracted_files = self._extract_kdz_firmware(firmware_path, output_dir)
+                elif manufacturer_info.extraction_method == 'ruu_decryption':
+                    extracted_files = self._extract_ruu_firmware(firmware_path, output_dir)
+                elif manufacturer_info.extraction_method == 'sin_extraction':
+                    extracted_files = self._extract_sin_firmware(firmware_path, output_dir)
+                else:
+                    # Generic extraction
+                    extracted_files = self._extract_firmware_generic(firmware_path, output_dir)
+            else:
+                # Generic extraction
+                extracted_files = self._extract_firmware_generic(firmware_path, output_dir)
+        
+        except Exception as e:
+            logger.error(f"Error in v2.0 extraction: {e}")
+            # Fallback to generic extraction
+            extracted_files = self._extract_firmware_generic(firmware_path, output_dir)
+        
+        return extracted_files
+    
+    def _extract_firmware_generic(self, firmware_path: Path, output_dir: Path) -> List[str]:
+        """Generic firmware extraction using 7zz"""
+        
+        extracted_files = []
+        
+        try:
+            if firmware_path.is_file():
+                # Extract archive
+                cmd = ['7zz', 'x', str(firmware_path), f'-o{output_dir}', '-y']
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=1800)
+                
+                if result.returncode == 0:
+                    # List extracted files
+                    for file_path in output_dir.rglob('*'):
+                        if file_path.is_file():
+                            extracted_files.append(str(file_path.relative_to(output_dir)))
+                else:
+                    print_warning(f"⚠️ 7zz extraction failed: {result.stderr}")
+            
+            elif firmware_path.is_dir():
+                # Copy directory contents
+                for item in firmware_path.rglob('*'):
+                    if item.is_file():
+                        rel_path = item.relative_to(firmware_path)
+                        dest_path = output_dir / rel_path
+                        dest_path.parent.mkdir(parents=True, exist_ok=True)
+                        shutil.copy2(item, dest_path)
+                        extracted_files.append(str(rel_path))
+        
+        except Exception as e:
+            logger.error(f"Generic extraction failed: {e}")
+        
+        return extracted_files
+    
+    def _extract_tar_firmware(self, firmware_path: Path, output_dir: Path) -> List[str]:
+        """Extract Samsung TAR firmware"""
+        
+        extracted_files = []
+        
+        try:
+            # Use tar to extract
+            cmd = ['tar', '-xf', str(firmware_path), '-C', str(output_dir)]
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=1800)
+            
+            if result.returncode == 0:
+                for file_path in output_dir.rglob('*'):
+                    if file_path.is_file():
+                        extracted_files.append(str(file_path.relative_to(output_dir)))
+        
+        except Exception as e:
+            logger.error(f"TAR extraction failed: {e}")
+        
+        return extracted_files
+    
+    def _extract_ozip_firmware(self, firmware_path: Path, output_dir: Path) -> List[str]:
+        """Extract OPPO/OnePlus OZIP firmware"""
+        
+        extracted_files = []
+        
+        try:
+            # Use ozipdecrypt.py
+            script_path = Path(self.config.tools_dir) / 'ozipdecrypt.py'
+            if script_path.exists():
+                cmd = ['python3', str(script_path), str(firmware_path), str(output_dir)]
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=1800)
+                
+                if result.returncode == 0:
+                    for file_path in output_dir.rglob('*'):
+                        if file_path.is_file():
+                            extracted_files.append(str(file_path.relative_to(output_dir)))
+        
+        except Exception as e:
+            logger.error(f"OZIP extraction failed: {e}")
+        
+        return extracted_files
+    
+    def _extract_update_app_firmware(self, firmware_path: Path, output_dir: Path) -> List[str]:
+        """Extract Huawei UPDATE.APP firmware"""
+        
+        extracted_files = []
+        
+        try:
+            # Use splituapp.py
+            script_path = Path(self.config.tools_dir) / 'splituapp.py'
+            if script_path.exists():
+                cmd = ['python3', str(script_path), str(firmware_path)]
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=1800, cwd=output_dir)
+                
+                if result.returncode == 0:
+                    for file_path in output_dir.rglob('*'):
+                        if file_path.is_file():
+                            extracted_files.append(str(file_path.relative_to(output_dir)))
+        
+        except Exception as e:
+            logger.error(f"UPDATE.APP extraction failed: {e}")
+        
+        return extracted_files
+    
+    def _extract_kdz_firmware(self, firmware_path: Path, output_dir: Path) -> List[str]:
+        """Extract LG KDZ firmware"""
+        
+        extracted_files = []
+        
+        try:
+            # Use unkdz.py
+            script_path = Path(self.config.tools_dir) / 'kdztools' / 'unkdz.py'
+            if script_path.exists():
+                cmd = ['python3', str(script_path), '-f', str(firmware_path), '-x', str(output_dir)]
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=1800)
+                
+                if result.returncode == 0:
+                    for file_path in output_dir.rglob('*'):
+                        if file_path.is_file():
+                            extracted_files.append(str(file_path.relative_to(output_dir)))
+        
+        except Exception as e:
+            logger.error(f"KDZ extraction failed: {e}")
+        
+        return extracted_files
+    
+    def _extract_ruu_firmware(self, firmware_path: Path, output_dir: Path) -> List[str]:
+        """Extract HTC RUU firmware"""
+        
+        extracted_files = []
+        
+        try:
+            # Use RUU_Decrypt_Tool
+            tool_path = Path(self.config.tools_dir) / 'RUU_Decrypt_Tool' / 'RUU_Decrypt_Tool'
+            if tool_path.exists():
+                cmd = [str(tool_path), str(firmware_path)]
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=1800, cwd=output_dir)
+                
+                if result.returncode == 0:
+                    for file_path in output_dir.rglob('*'):
+                        if file_path.is_file():
+                            extracted_files.append(str(file_path.relative_to(output_dir)))
+        
+        except Exception as e:
+            logger.error(f"RUU extraction failed: {e}")
+        
+        return extracted_files
+    
+    def _extract_sin_firmware(self, firmware_path: Path, output_dir: Path) -> List[str]:
+        """Extract Sony SIN firmware"""
+        
+        extracted_files = []
+        
+        try:
+            # Use unsin
+            tool_path = Path(self.config.tools_dir) / 'unsin' / 'unsin'
+            if tool_path.exists():
+                cmd = [str(tool_path), str(firmware_path)]
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=1800, cwd=output_dir)
+                
+                if result.returncode == 0:
+                    for file_path in output_dir.rglob('*'):
+                        if file_path.is_file():
+                            extracted_files.append(str(file_path.relative_to(output_dir)))
+        
+        except Exception as e:
+            logger.error(f"SIN extraction failed: {e}")
+        
+        return extracted_files
+    
+    def _analyze_boot_images_v2(self, output_dir: Path) -> Dict[str, Any]:
+        """Analyze boot images using enhanced v2.0 analyzer"""
+        
+        boot_results = {}
+        
+        try:
+            if hasattr(self, 'boot_analyzer'):
+                boot_results = self.boot_analyzer.analyze_boot_images(output_dir)
+        except Exception as e:
+            logger.error(f"Boot analysis failed: {e}")
+        
+        return boot_results
+    
+    def _extract_device_info_v2(self, output_dir: Path, manufacturer_info) -> Dict[str, Any]:
+        """Extract comprehensive device information for v2.0"""
+        
+        device_info = {}
+        
+        try:
+            # Use existing device detector
+            device_info = self.device_detector.detect_device_info(output_dir)
+            
+            # Enhance with manufacturer-specific info
+            if manufacturer_info:
+                device_info['manufacturer'] = manufacturer_info.name
+                device_info['model'] = manufacturer_info.model
+                device_info['android_version'] = manufacturer_info.android_version
+                device_info['build_id'] = manufacturer_info.build_id
+        
+        except Exception as e:
+            logger.error(f"Device info extraction failed: {e}")
+        
+        return device_info
+    
+    def _generate_extraction_report_v2(self, results: Dict[str, Any], output_dir: Path):
+        """Generate comprehensive extraction report for v2.0"""
+        
+        try:
+            report_file = output_dir / 'extraction_report.json'
+            
+            import json
+            with open(report_file, 'w') as f:
+                # Convert non-serializable objects
+                serializable_results = {}
+                for key, value in results.items():
+                    if hasattr(value, '__dict__'):
+                        serializable_results[key] = value.__dict__
+                    elif isinstance(value, Path):
+                        serializable_results[key] = str(value)
+                    else:
+                        serializable_results[key] = value
+                
+                json.dump(serializable_results, f, indent=2, default=str)
+            
+            # Generate README
+            readme_file = output_dir / 'README.md'
+            self._generate_readme_v2(results, readme_file)
+            
+        except Exception as e:
+            logger.error(f"Report generation failed: {e}")
+    
+    def _generate_readme_v2(self, results: Dict[str, Any], readme_file: Path):
+        """Generate README.md for extracted firmware"""
+        
+        try:
+            manufacturer_info = results.get('manufacturer_info')
+            device_info = results.get('device_info', {})
+            
+            content = f"""# Firmware Extraction Report
+
+## Device Information
+- **Manufacturer:** {manufacturer_info.name.title() if manufacturer_info else 'Unknown'}
+- **Model:** {manufacturer_info.model if manufacturer_info else device_info.get('model', 'Unknown')}
+- **Android Version:** {manufacturer_info.android_version if manufacturer_info else device_info.get('android_version', 'Unknown')}
+- **Build ID:** {manufacturer_info.build_id if manufacturer_info else device_info.get('build_id', 'Unknown')}
+
+## Extraction Details
+- **Extraction Method:** {results.get('extraction_method', 'Unknown')}
+- **Processing Time:** {results.get('processing_time', 0):.1f} seconds
+- **Files Extracted:** {len(results.get('extracted_files', []))}
+
+## Boot Analysis
+"""
+            
+            boot_analysis = results.get('boot_analysis', {})
+            if boot_analysis:
+                for image_name, analysis in boot_analysis.items():
+                    if 'boot_info' in analysis:
+                        boot_info = analysis['boot_info']
+                        content += f"""
+### {image_name}
+- **Image Type:** {boot_info.image_type.value if hasattr(boot_info, 'image_type') else 'Unknown'}
+- **Ramdisk Version:** {boot_info.ramdisk_version.value if hasattr(boot_info, 'ramdisk_version') else 'Unknown'}
+- **Compression:** {boot_info.compression.value if hasattr(boot_info, 'compression') else 'Unknown'}
+"""
+            
+            content += f"""
+## Extracted Files
+"""
+            
+            for file_path in results.get('extracted_files', [])[:20]:  # Show first 20 files
+                content += f"- {file_path}\n"
+            
+            if len(results.get('extracted_files', [])) > 20:
+                content += f"- ... and {len(results.get('extracted_files', [])) - 20} more files\n"
+            
+            content += f"""
+---
+*Generated by DumprX v2.0 - Advanced Firmware Extraction Toolkit*
+"""
+            
+            with open(readme_file, 'w') as f:
+                f.write(content)
+            
+        except Exception as e:
+            logger.error(f"README generation failed: {e}")
+    
+    def _setup_git_repository_v2(self, output_dir: Path, results: Dict[str, Any]):
+        """Setup Git repository for extracted firmware (v2.0)"""
+        
+        try:
+            # Initialize git repository
+            subprocess.run(['git', 'init'], cwd=output_dir, capture_output=True)
+            
+            # Add all files
+            subprocess.run(['git', 'add', '.'], cwd=output_dir, capture_output=True)
+            
+            # Create commit message
+            manufacturer_info = results.get('manufacturer_info')
+            if manufacturer_info:
+                commit_msg = f"Initial firmware extraction: {manufacturer_info.name} {manufacturer_info.model}"
+            else:
+                commit_msg = "Initial firmware extraction"
+            
+            subprocess.run(['git', 'commit', '-m', commit_msg], cwd=output_dir, capture_output=True)
+            
+            print_info("🐙 Git repository initialized")
+            
+        except Exception as e:
+            logger.error(f"Git setup failed: {e}")

@@ -83,3 +83,28 @@ class ExternalToolsManager:
                 current_path = os.environ.get("PATH", "")
                 if str(uv_path) not in current_path:
                     os.environ["PATH"] = f"{uv_path}:{current_path}"
+    
+    def is_tool_available(self, tool_name: str) -> bool:
+        """Check if a tool is available in the system"""
+        
+        # Check if it's a system command
+        if shutil.which(tool_name):
+            return True
+        
+        # Check if it's in our tools directory
+        tool_path = Path(self.config.tools_dir) / tool_name
+        if tool_path.exists():
+            return True
+        
+        # Check common tool locations
+        common_locations = [
+            Path(self.config.tools_dir) / 'bin' / tool_name,
+            Path(self.config.tools_dir) / tool_name / tool_name,
+            Path(self.config.utils_dir) / tool_name / tool_name,
+        ]
+        
+        for location in common_locations:
+            if location.exists():
+                return True
+        
+        return False

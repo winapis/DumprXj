@@ -1,3 +1,19 @@
+# Core dependencies for DumprX v2.0
 click>=8.0.0
 rich>=13.0.0
 requests>=2.25.0
+
+# Enhanced v2.0 features
+python-magic>=0.4.24
+lz4>=4.0.0
+zstandard>=0.19.0
+
+# Optional dependencies
+python-telegram-bot>=20.0; extra == "telegram"
+asyncio-mqtt>=0.13.0; extra == "mqtt"
+
+# Development dependencies
+pytest>=7.0.0; extra == "dev"
+black>=22.0.0; extra == "dev"
+isort>=5.0.0; extra == "dev"
+mypy>=1.0.0; extra == "dev"

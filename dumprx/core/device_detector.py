@@ -320,3 +320,7 @@ class DeviceDetector:
             print_info(f"  Fingerprint: {self.device_info['fingerprint']}")
         
         print_info(f"  Branch: {self.get_git_branch_name()}")
+    
+    def detect_device_info(self, base_dir: Path) -> Dict[str, str]:
+        """V2.0 compatible method - alias for detect_device_config"""
+        return self.detect_device_config(base_dir)
