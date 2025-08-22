@@ -141,8 +141,8 @@ jobs:
         
     - name: Run firmware dumper
       run: |
-        chmod +x dumper.sh
-        ./dumper.sh '${{ inputs.firmware_url }}'
+        chmod +x dumprx.py
+        ./dumprx.py '${{ inputs.firmware_url }}'
         
     - name: Cleanup sensitive files
       if: always()

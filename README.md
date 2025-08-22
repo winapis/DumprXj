@@ -11,9 +11,17 @@
 
 You might've used firmware extractor via dumpyara from https://github.com/AndroidDumps/. This toolkit is revamped edition of the tools with some improvements and feature additions.
 
+**NEW in v2.0:** Complete rewrite from Bash to Python with modular architecture, modern UI, async processing, and enhanced error handling.
+
 ## The improvements over dumpyara
 
 - [x] dumpyara's and firmware_extractor's scripts are merged with handpicked shellcheck-ed and pylint-ed improvements
+- [x] **Complete Python rewrite** with modular, extensible architecture
+- [x] **Modern CLI interface** with colored output, emojis, and progress bars  
+- [x] **Async/await processing** for better performance and parallel downloads
+- [x] **Plugin-based extraction system** easily extensible for new firmware types
+- [x] **YAML configuration** with automatic token loading from files
+- [x] **Enhanced error handling** with detailed logging and recovery options
 - [x] The script can download and dump firmware from different filehosters such as Mega.NZ, Mediafire.com, AndroidFileHost.com and from Google Drive URLs
 - [x] File as-well-as Folder as an input is processed thoroughly to check all kinds of supported firmware types
 - [x] All the external tools are now inherited into one place and unnesessary files removed
@@ -30,16 +38,30 @@ Support for Alpine Linux is added and tested. You can give it a try.
 
 For any other UNIX Distributions, please refer to internal [Setup File](setup.sh) and install the required programs via their own package manager.
 
+## Architecture (v2.0)
+
+DumprX v2.0 features a complete modular architecture built in Python:
+
+- **`dumprx.py`** - Main CLI entry point with async processing pipeline
+- **`lib/config.py`** - YAML/JSON configuration management with token loading
+- **`lib/ui.py`** - Modern terminal UI with emojis, colors and progress bars
+- **`lib/download.py`** - Multi-source download manager (Mega, MediaFire, GDrive, etc.)
+- **`lib/extractor.py`** - Plugin-based extraction system for all firmware types
+- **`lib/firmware.py`** - Firmware detection, analysis and partition discovery  
+- **`lib/git.py`** - GitHub/GitLab integration with automatic LFS setup
+- **`lib/telegram.py`** - Telegram notifications for extraction status
+- **`config.yaml`** - Central configuration with all settings and tokens
+
 ## Prepare toolkit dependencies / requirements
 
-To prepare for this toolkit, run [Setup File](setup.sh) at first, which is needed only one time. After that, run [Main Script](dumper.sh) with proper argument.
+To prepare for this toolkit, run [Setup File](setup.sh) at first, which is needed only one time. After that, run [Main Script](dumprx.py) with proper argument.
 
 ## Usage
 
 Run this toolkit with proper firmware file/folder path or URL
 
 ```bash
-./dumper.sh 'Firmware File/Extracted Folder -OR- Supported Website Link'
+./dumprx.py 'Firmware File/Extracted Folder -OR- Supported Website Link'
 ```
 
 Help Context:
@@ -56,6 +78,12 @@ Help Context:
          system.new.img | system.img | system-sign.img | UPDATE.APP
          *.emmc.img | *.img.ext4 | system.bin | system-p | payload.bin
          *.nb0 | .*chunk* | *.pac | *super*.img | *system*.sin
+  >> CLI Options:
+         --config PATH     Use custom configuration file  
+         --verbose        Enable debug logging
+         --no-upload      Skip Git repository upload
+         --validate       Validate setup and dependencies
+         --help           Show help message
 ```
 
 ## GitHub Actions Workflow Usage

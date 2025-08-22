@@ -1,3 +1,4 @@
+# Token files (sensitive)
 .github_token
 .github_orgname
 .gitlab_token
@@ -5,11 +6,64 @@
 .gitlab_instance
 .tg_token
 .tg_chat
+
+# Python
 .venv/
+*.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+
+# DumprX directories
 input/
 tmp/
 out/
-*.pyc
-__pycache__
+temp/
+
+# External tools (downloaded during setup)
 utils/oppo_*
 utils/vmlinux*
+utils/android_tools/
+utils/pacextractor/
+
+# Log files
+*.log
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Compressed files (temporary downloads)
+*.zip
+*.rar
+*.7z
+*.tar
+*.tar.gz
+*.tgz
+!utils/**/*.zip
+!utils/**/*.rar
+!utils/**/*.7z
+
+# Firmware files (temporary)
+*.kdz
+*.ofp
+*.ops
+*.ozip
+*.nb0
+*.pac
+*.img
+*.sin
+payload.bin
+UPDATE.APP
