@@ -6,6 +6,7 @@ rich>=13.0.0
 colorama>=0.4.6
 humanize>=4.7.0
 psutil>=5.9.0
+pycryptodome>=3.15.0
 
 # Compression and archives
 rarfile>=4.1
